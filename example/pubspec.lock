@@ -42,7 +42,7 @@ packages:
     source: hosted
     version: "1.19.1"
   cupertino_icons:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: cupertino_icons
       sha256: ba631d1c7f7bef6b729a622b7b752645a2d076dba9976925b8f25725a30e1ee6
@@ -58,7 +58,7 @@ packages:
     source: hosted
     version: "1.4.0"
   device_preview:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: device_preview
       sha256: "88aa1cc73ee9a8ec771b309dcbc4000cc66b5d8456b825980997640ab1195bf5"
@@ -117,6 +117,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  form_flutter:
+    dependency: "direct main"
+    description:
+      path: ".."
+      relative: true
+    source: path
+    version: "0.0.1"
   freezed_annotation:
     dependency: transitive
     description:

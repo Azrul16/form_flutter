@@ -7,7 +7,7 @@ void main() {
     await tester.pumpWidget(const FormFlutterApp());
 
     expect(find.text('form_flutter'), findsOneWidget);
-    expect(find.text('A package direction for building serious Flutter forms.'), findsOneWidget);
-    expect(find.text('Validate package flow'), findsOneWidget);
+    expect(find.text('Full Example Form'), findsOneWidget);
+    expect(find.text('Create Form'), findsOneWidget);
   });
 }

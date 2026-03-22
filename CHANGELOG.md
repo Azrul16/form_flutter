@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and follows the versioning used by the package.
 
+## 0.1.0
+
+- Added controller serialization helpers with `toJson()` and `fromJson()` support for form values, `DateTime`, `TimeOfDay`, and `FormFlutterFileValue`
+- Added controller state-management helpers for `reset()`, `resetField()`, touched tracking, dirty tracking, and listenables for touched/dirty field state
+- Added focused controller tests covering serialization, reset behavior, and touched/dirty tracking
+- Updated the package playground and example app to demonstrate export, import, reset, and live touched/dirty state previews
+
 ## 0.0.2
 
 - Added country-aware phone input with dial-code selection, digit limiting, and allowed-country filtering

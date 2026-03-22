@@ -4,11 +4,12 @@ A Flutter package for building reusable, schema-friendly forms with shared valid
 
 ## Features
 
-- Reusable form controller for values, errors, and async validation state
-- Common field widgets for text, password, multiline, number, dropdown, radio, checkbox, switch, date, time, date-time, slider, and multi-select
+- Reusable form controller for values, errors, async validation state, serialization, reset flows, and touched or dirty tracking
+- Common field widgets for text, password, multiline, number, phone, country, dropdown, radio, checkbox, switch, date, time, date-time, slider, and multi-select
 - Sync and async validators for text, numbers, dates, files, conditional rules, and uniqueness checks
 - Preset field catalog for personal, contact, address, account, academic, professional, survey, commerce, appointment, and consent flows
 - Common option sets for fields like gender, marital status, degree, employment type, payment method, and more
+- Dedicated example app and local playground demonstrating controller export, import, reset, and live state previews
 
 ## Getting started
 
@@ -16,7 +17,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  form_flutter: ^1.0.0
+  form_flutter: ^0.1.0
 ```
 
 Then run:
@@ -40,6 +41,9 @@ final controller = FormFlutterController(
   initialValues: const {
     'fullName': '',
     'email': '',
+    'phone': '',
+    'phoneCountry': 'US',
+    'team': 'product',
     'acceptTerms': false,
   },
 );
@@ -65,6 +69,25 @@ final fields = <FormFlutterField<dynamic>>[
       (email, _) async => email != 'taken@example.com',
     ),
   ),
+  FormFlutterPhoneField(
+    name: 'phone',
+    label: 'Phone',
+    countryFieldName: 'phoneCountry',
+    validator: FormFlutterValidators.combine([
+      FormFlutterValidators.requiredText(),
+      FormFlutterValidators.numericText(),
+    ]),
+  ),
+  FormFlutterDropdownField<String>(
+    name: 'team',
+    label: 'Team',
+    options: const [
+      FormFlutterOption(value: 'design', label: 'Design'),
+      FormFlutterOption(value: 'product', label: 'Product'),
+      FormFlutterOption(value: 'engineering', label: 'Engineering'),
+    ],
+    validator: FormFlutterValidators.requiredSelection<String>(),
+  ),
   FormFlutterCheckboxField(
     name: 'acceptTerms',
     label: 'I agree to the Terms and Conditions',
@@ -86,7 +109,133 @@ DynamicFormFlutter(
 )
 ```
 
-For a complete runnable sample, see [`example/lib/main.dart`](example/lib/main.dart).
+### Quick Example
+
+```dart
+class RegistrationForm extends StatefulWidget {
+  const RegistrationForm({super.key});
+
+  @override
+  State<RegistrationForm> createState() => _RegistrationFormState();
+}
+
+class _RegistrationFormState extends State<RegistrationForm> {
+  final controller = FormFlutterController(
+    initialValues: const {
+      'fullName': '',
+      'email': '',
+      'phone': '',
+      'phoneCountry': 'US',
+      'newsletter': true,
+    },
+  );
+
+  late final fields = <FormFlutterField<dynamic>>[
+    FormFlutterTextField(
+      name: 'fullName',
+      label: 'Full name',
+      validator: FormFlutterValidators.combine([
+        FormFlutterValidators.requiredText(),
+        FormFlutterValidators.minLength(3),
+      ]),
+    ),
+    FormFlutterTextField(
+      name: 'email',
+      label: 'Email',
+      keyboardType: TextInputType.emailAddress,
+      validator: FormFlutterPresetValidators.emailAddress(),
+    ),
+    FormFlutterPhoneField(
+      name: 'phone',
+      label: 'Phone',
+      countryFieldName: 'phoneCountry',
+      validator: FormFlutterValidators.combine([
+        FormFlutterValidators.requiredText(),
+        FormFlutterValidators.numericText(),
+      ]),
+    ),
+    FormFlutterSwitchField(
+      name: 'newsletter',
+      label: 'Receive product updates',
+    ),
+  ];
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DynamicFormFlutter(
+      controller: controller,
+      fields: fields,
+      submitLabel: 'Create account',
+      onSubmit: (values) {
+        final json = controller.toJson();
+        debugPrint('Submitted values: ${values.asMap()}');
+        debugPrint('Serialized snapshot: $json');
+      },
+    );
+  }
+}
+```
+
+For complete runnable samples, see [`example/lib/main.dart`](example/lib/main.dart) and [`lib/main.dart`](lib/main.dart).
+
+## Controller helpers
+
+`FormFlutterController` now includes state and serialization helpers for real-world form flows.
+
+```dart
+final snapshot = controller.toJson();
+
+controller.fromJson(snapshot);
+controller.reset();
+controller.resetField('email');
+
+final isEmailTouched = controller.isTouched('email');
+final isEmailDirty = controller.isDirty('email');
+final hasUnsavedChanges = controller.hasDirtyFields;
+```
+
+Available controller helpers include:
+
+- `toJson` and `fromJson` for serializing and restoring values
+- `reset` and `resetField` for full-form and per-field reset flows
+- `isTouched`, `isDirty`, `hasTouchedFields`, and `hasDirtyFields` for change tracking
+- `touchedFieldsListenable` and `dirtyFieldsListenable` for reactive UI updates
+- `valuesListenable`, `errorsListenable`, and `asyncStatesListenable` for controller-driven widgets
+
+Serialization notes:
+
+- `DateTime` values are exported as ISO-8601 strings
+- `TimeOfDay` values are exported with a tagged JSON object and restored automatically
+- `FormFlutterFileValue` values are exported with name, size, extension, and MIME metadata
+
+## API overview
+
+| Area | Main APIs |
+| --- | --- |
+| Controller | `FormFlutterController`, `FormFlutterValues` |
+| Form widget | `DynamicFormFlutter` |
+| Text-like fields | `FormFlutterTextField`, `FormFlutterNumberField`, `FormFlutterPhoneField`, `FormFlutterCountryField` |
+| Choice fields | `FormFlutterDropdownField`, `FormFlutterRadioGroupField`, `FormFlutterMultiSelectField` |
+| Toggle fields | `FormFlutterCheckboxField`, `FormFlutterSwitchField` |
+| Date and time fields | `FormFlutterDateField`, `FormFlutterTimeField`, `FormFlutterDateTimeField` |
+| Range fields | `FormFlutterSliderField` |
+| Validators | `FormFlutterValidators`, `FormFlutterPresetValidators` |
+| Catalog and presets | `FormFlutterCatalog`, `FormFlutterOptionSets`, `FormFlutterFieldPreset` |
+| Supporting models | `FormFlutterOption`, `FormFlutterFileValue` |
+
+Typical flow:
+
+1. Create a `FormFlutterController` with `initialValues`.
+2. Define a list of `FormFlutterField<dynamic>` widgets.
+3. Attach validators and async validators where needed.
+4. Render everything with `DynamicFormFlutter`.
+5. Read `values.asMap()` on submit or persist with `controller.toJson()`.
 
 ## Styling and customization
 
@@ -196,6 +345,18 @@ Available validator helpers include:
 - `uniqueValue`, `uniqueUsername`, `uniqueEmail`
 - `combine`, `combineAsync`, `custom`
 
+Preset validator helpers also include:
+
+- `FormFlutterPresetValidators.emailAddress()`
+- `FormFlutterPresetValidators.phoneNumber()`
+- `FormFlutterPresetValidators.password()`
+- `FormFlutterPresetValidators.strongPassword()`
+- `FormFlutterPresetValidators.highStrengthPassword()`
+- `FormFlutterPresetValidators.confirmPassword()`
+- `FormFlutterPresetValidators.otp()`
+- `FormFlutterPresetValidators.uniqueUsername()`
+- `FormFlutterPresetValidators.uniqueEmail()`
+
 ## Preset catalog
 
 `form_flutter` includes metadata presets and option sets to help build real-world forms faster.
@@ -220,4 +381,11 @@ Examples of shared option sets:
 
 ## Additional information
 
-This package includes a dedicated `example/` app for pub.dev example points, and the root app in `lib/main.dart` acts as a local full-form playground with styling, colored options, and broader customization examples.
+This package includes:
+
+- a dedicated `example/` app for pub.dev example points
+- a root app in `lib/main.dart` that acts as a local full-form playground
+- live examples of controller export, import, reset, and touched or dirty state previews
+- controller tests covering serialization, reset behavior, and field-state tracking
+
+If you want to explore the most complete demos, start with [`example/lib/main.dart`](example/lib/main.dart) and [`lib/main.dart`](lib/main.dart).

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and follows the versioning used by the package.
 
-## 1.0.0
+## 0.0.1
 
 - Initial package foundation for `form_flutter`
 - Added `FormFlutterController` for centralized form values and error handling

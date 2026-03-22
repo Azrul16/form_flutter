@@ -1,0 +1,255 @@
+class FormFlutterPhoneCountry {
+  const FormFlutterPhoneCountry({
+    required this.isoCode,
+    required this.name,
+    required this.dialCode,
+    this.minNationalNumberLength = 4,
+    this.maxNationalNumberLength = 15,
+  });
+
+  final String isoCode;
+  final String name;
+  final String dialCode;
+  final int minNationalNumberLength;
+  final int maxNationalNumberLength;
+
+  String get flagEmoji {
+    final normalized = isoCode.toUpperCase();
+    if (normalized.length != 2) {
+      return '';
+    }
+    final first = normalized.codeUnitAt(0) - 0x41 + 0x1F1E6;
+    final second = normalized.codeUnitAt(1) - 0x41 + 0x1F1E6;
+    return String.fromCharCode(first) + String.fromCharCode(second);
+  }
+}
+
+abstract final class FormFlutterPhoneCountries {
+  static const List<FormFlutterPhoneCountry> all = [
+    FormFlutterPhoneCountry(isoCode: 'AF', name: 'Afghanistan', dialCode: '+93', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'AL', name: 'Albania', dialCode: '+355', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'DZ', name: 'Algeria', dialCode: '+213', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'AD', name: 'Andorra', dialCode: '+376', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'AO', name: 'Angola', dialCode: '+244', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'AG', name: 'Antigua and Barbuda', dialCode: '+1-268', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'AR', name: 'Argentina', dialCode: '+54', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'AM', name: 'Armenia', dialCode: '+374', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'AU', name: 'Australia', dialCode: '+61', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'AT', name: 'Austria', dialCode: '+43', maxNationalNumberLength: 13),
+    FormFlutterPhoneCountry(isoCode: 'AZ', name: 'Azerbaijan', dialCode: '+994', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'BS', name: 'Bahamas', dialCode: '+1-242', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'BH', name: 'Bahrain', dialCode: '+973', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'BD', name: 'Bangladesh', dialCode: '+880', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'BB', name: 'Barbados', dialCode: '+1-246', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'BY', name: 'Belarus', dialCode: '+375', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'BE', name: 'Belgium', dialCode: '+32', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'BZ', name: 'Belize', dialCode: '+501', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'BJ', name: 'Benin', dialCode: '+229', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'BT', name: 'Bhutan', dialCode: '+975', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'BO', name: 'Bolivia', dialCode: '+591', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'BA', name: 'Bosnia and Herzegovina', dialCode: '+387', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'BW', name: 'Botswana', dialCode: '+267', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'BR', name: 'Brazil', dialCode: '+55', maxNationalNumberLength: 11),
+    FormFlutterPhoneCountry(isoCode: 'BN', name: 'Brunei', dialCode: '+673', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'BG', name: 'Bulgaria', dialCode: '+359', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'BF', name: 'Burkina Faso', dialCode: '+226', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'BI', name: 'Burundi', dialCode: '+257', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'CV', name: 'Cabo Verde', dialCode: '+238', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'KH', name: 'Cambodia', dialCode: '+855', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'CM', name: 'Cameroon', dialCode: '+237', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'CA', name: 'Canada', dialCode: '+1', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'CF', name: 'Central African Republic', dialCode: '+236', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'TD', name: 'Chad', dialCode: '+235', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'CL', name: 'Chile', dialCode: '+56', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'CN', name: 'China', dialCode: '+86', maxNationalNumberLength: 11),
+    FormFlutterPhoneCountry(isoCode: 'CO', name: 'Colombia', dialCode: '+57', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'KM', name: 'Comoros', dialCode: '+269', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'CG', name: 'Congo', dialCode: '+242', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'CD', name: 'Congo, Democratic Republic of the', dialCode: '+243', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'CR', name: 'Costa Rica', dialCode: '+506', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'CI', name: "Cote d'Ivoire", dialCode: '+225', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'HR', name: 'Croatia', dialCode: '+385', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'CU', name: 'Cuba', dialCode: '+53', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'CY', name: 'Cyprus', dialCode: '+357', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'CZ', name: 'Czech Republic', dialCode: '+420', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'DK', name: 'Denmark', dialCode: '+45', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'DJ', name: 'Djibouti', dialCode: '+253', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'DM', name: 'Dominica', dialCode: '+1-767', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'DO', name: 'Dominican Republic', dialCode: '+1-809', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'EC', name: 'Ecuador', dialCode: '+593', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'EG', name: 'Egypt', dialCode: '+20', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'SV', name: 'El Salvador', dialCode: '+503', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'GQ', name: 'Equatorial Guinea', dialCode: '+240', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'ER', name: 'Eritrea', dialCode: '+291', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'EE', name: 'Estonia', dialCode: '+372', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'SZ', name: 'Eswatini', dialCode: '+268', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'ET', name: 'Ethiopia', dialCode: '+251', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'FJ', name: 'Fiji', dialCode: '+679', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'FI', name: 'Finland', dialCode: '+358', maxNationalNumberLength: 12),
+    FormFlutterPhoneCountry(isoCode: 'FR', name: 'France', dialCode: '+33', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'GA', name: 'Gabon', dialCode: '+241', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'GM', name: 'Gambia', dialCode: '+220', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'GE', name: 'Georgia', dialCode: '+995', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'DE', name: 'Germany', dialCode: '+49', maxNationalNumberLength: 11),
+    FormFlutterPhoneCountry(isoCode: 'GH', name: 'Ghana', dialCode: '+233', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'GR', name: 'Greece', dialCode: '+30', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'GD', name: 'Grenada', dialCode: '+1-473', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'GT', name: 'Guatemala', dialCode: '+502', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'GN', name: 'Guinea', dialCode: '+224', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'GW', name: 'Guinea-Bissau', dialCode: '+245', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'GY', name: 'Guyana', dialCode: '+592', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'HT', name: 'Haiti', dialCode: '+509', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'HN', name: 'Honduras', dialCode: '+504', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'HU', name: 'Hungary', dialCode: '+36', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'IS', name: 'Iceland', dialCode: '+354', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'IN', name: 'India', dialCode: '+91', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'ID', name: 'Indonesia', dialCode: '+62', maxNationalNumberLength: 11),
+    FormFlutterPhoneCountry(isoCode: 'IR', name: 'Iran', dialCode: '+98', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'IQ', name: 'Iraq', dialCode: '+964', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'IE', name: 'Ireland', dialCode: '+353', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'IL', name: 'Israel', dialCode: '+972', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'IT', name: 'Italy', dialCode: '+39', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'JM', name: 'Jamaica', dialCode: '+1-876', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'JP', name: 'Japan', dialCode: '+81', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'JO', name: 'Jordan', dialCode: '+962', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'KZ', name: 'Kazakhstan', dialCode: '+7', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'KE', name: 'Kenya', dialCode: '+254', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'KI', name: 'Kiribati', dialCode: '+686', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'KP', name: 'Korea, North', dialCode: '+850', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'KR', name: 'Korea, South', dialCode: '+82', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'KW', name: 'Kuwait', dialCode: '+965', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'KG', name: 'Kyrgyzstan', dialCode: '+996', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'LA', name: 'Laos', dialCode: '+856', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'LV', name: 'Latvia', dialCode: '+371', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'LB', name: 'Lebanon', dialCode: '+961', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'LS', name: 'Lesotho', dialCode: '+266', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'LR', name: 'Liberia', dialCode: '+231', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'LY', name: 'Libya', dialCode: '+218', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'LI', name: 'Liechtenstein', dialCode: '+423', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'LT', name: 'Lithuania', dialCode: '+370', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'LU', name: 'Luxembourg', dialCode: '+352', maxNationalNumberLength: 11),
+    FormFlutterPhoneCountry(isoCode: 'MG', name: 'Madagascar', dialCode: '+261', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'MW', name: 'Malawi', dialCode: '+265', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'MY', name: 'Malaysia', dialCode: '+60', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'MV', name: 'Maldives', dialCode: '+960', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'ML', name: 'Mali', dialCode: '+223', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'MT', name: 'Malta', dialCode: '+356', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'MH', name: 'Marshall Islands', dialCode: '+692', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'MR', name: 'Mauritania', dialCode: '+222', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'MU', name: 'Mauritius', dialCode: '+230', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'MX', name: 'Mexico', dialCode: '+52', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'FM', name: 'Micronesia', dialCode: '+691', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'MD', name: 'Moldova', dialCode: '+373', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'MC', name: 'Monaco', dialCode: '+377', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'MN', name: 'Mongolia', dialCode: '+976', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'ME', name: 'Montenegro', dialCode: '+382', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'MA', name: 'Morocco', dialCode: '+212', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'MZ', name: 'Mozambique', dialCode: '+258', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'MM', name: 'Myanmar', dialCode: '+95', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'NA', name: 'Namibia', dialCode: '+264', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'NR', name: 'Nauru', dialCode: '+674', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'NP', name: 'Nepal', dialCode: '+977', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'NL', name: 'Netherlands', dialCode: '+31', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'NZ', name: 'New Zealand', dialCode: '+64', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'NI', name: 'Nicaragua', dialCode: '+505', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'NE', name: 'Niger', dialCode: '+227', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'NG', name: 'Nigeria', dialCode: '+234', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'MK', name: 'North Macedonia', dialCode: '+389', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'NO', name: 'Norway', dialCode: '+47', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'OM', name: 'Oman', dialCode: '+968', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'PK', name: 'Pakistan', dialCode: '+92', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'PW', name: 'Palau', dialCode: '+680', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'PS', name: 'Palestine', dialCode: '+970', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'PA', name: 'Panama', dialCode: '+507', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'PG', name: 'Papua New Guinea', dialCode: '+675', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'PY', name: 'Paraguay', dialCode: '+595', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'PE', name: 'Peru', dialCode: '+51', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'PH', name: 'Philippines', dialCode: '+63', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'PL', name: 'Poland', dialCode: '+48', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'PT', name: 'Portugal', dialCode: '+351', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'QA', name: 'Qatar', dialCode: '+974', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'RO', name: 'Romania', dialCode: '+40', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'RU', name: 'Russia', dialCode: '+7', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'RW', name: 'Rwanda', dialCode: '+250', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'KN', name: 'Saint Kitts and Nevis', dialCode: '+1-869', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'LC', name: 'Saint Lucia', dialCode: '+1-758', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'VC', name: 'Saint Vincent and the Grenadines', dialCode: '+1-784', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'WS', name: 'Samoa', dialCode: '+685', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'SM', name: 'San Marino', dialCode: '+378', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'ST', name: 'Sao Tome and Principe', dialCode: '+239', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'SA', name: 'Saudi Arabia', dialCode: '+966', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'SN', name: 'Senegal', dialCode: '+221', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'RS', name: 'Serbia', dialCode: '+381', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'SC', name: 'Seychelles', dialCode: '+248', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'SL', name: 'Sierra Leone', dialCode: '+232', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'SG', name: 'Singapore', dialCode: '+65', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'SK', name: 'Slovakia', dialCode: '+421', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'SI', name: 'Slovenia', dialCode: '+386', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'SB', name: 'Solomon Islands', dialCode: '+677', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'SO', name: 'Somalia', dialCode: '+252', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'ZA', name: 'South Africa', dialCode: '+27', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'SS', name: 'South Sudan', dialCode: '+211', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'ES', name: 'Spain', dialCode: '+34', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'LK', name: 'Sri Lanka', dialCode: '+94', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'SD', name: 'Sudan', dialCode: '+249', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'SR', name: 'Suriname', dialCode: '+597', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'SE', name: 'Sweden', dialCode: '+46', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'CH', name: 'Switzerland', dialCode: '+41', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'SY', name: 'Syria', dialCode: '+963', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'TW', name: 'Taiwan', dialCode: '+886', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'TJ', name: 'Tajikistan', dialCode: '+992', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'TZ', name: 'Tanzania', dialCode: '+255', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'TH', name: 'Thailand', dialCode: '+66', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'TL', name: 'Timor-Leste', dialCode: '+670', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'TG', name: 'Togo', dialCode: '+228', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'TO', name: 'Tonga', dialCode: '+676', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'TT', name: 'Trinidad and Tobago', dialCode: '+1-868', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'TN', name: 'Tunisia', dialCode: '+216', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'TR', name: 'Turkey', dialCode: '+90', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'TM', name: 'Turkmenistan', dialCode: '+993', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'TV', name: 'Tuvalu', dialCode: '+688', maxNationalNumberLength: 6),
+    FormFlutterPhoneCountry(isoCode: 'UG', name: 'Uganda', dialCode: '+256', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'UA', name: 'Ukraine', dialCode: '+380', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'AE', name: 'United Arab Emirates', dialCode: '+971', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'GB', name: 'United Kingdom', dialCode: '+44', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'US', name: 'United States', dialCode: '+1', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'UY', name: 'Uruguay', dialCode: '+598', maxNationalNumberLength: 8),
+    FormFlutterPhoneCountry(isoCode: 'UZ', name: 'Uzbekistan', dialCode: '+998', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'VU', name: 'Vanuatu', dialCode: '+678', maxNationalNumberLength: 7),
+    FormFlutterPhoneCountry(isoCode: 'VA', name: 'Vatican City', dialCode: '+379', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'VE', name: 'Venezuela', dialCode: '+58', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'VN', name: 'Vietnam', dialCode: '+84', maxNationalNumberLength: 10),
+    FormFlutterPhoneCountry(isoCode: 'YE', name: 'Yemen', dialCode: '+967', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'ZM', name: 'Zambia', dialCode: '+260', maxNationalNumberLength: 9),
+    FormFlutterPhoneCountry(isoCode: 'ZW', name: 'Zimbabwe', dialCode: '+263', maxNationalNumberLength: 9),
+  ];
+
+  static FormFlutterPhoneCountry byIsoCode(String? isoCode) {
+    final normalized = isoCode?.trim().toUpperCase();
+    if (normalized == null || normalized.isEmpty) {
+      return fallback;
+    }
+    for (final country in all) {
+      if (country.isoCode == normalized) {
+        return country;
+      }
+    }
+    return fallback;
+  }
+
+  static List<FormFlutterPhoneCountry> resolveAllowed(List<String>? isoCodes) {
+    if (isoCodes == null || isoCodes.isEmpty) {
+      return all;
+    }
+    final allowed = isoCodes.map((value) => value.trim().toUpperCase()).toSet();
+    final filtered = all.where((country) => allowed.contains(country.isoCode)).toList(growable: false);
+    return filtered.isEmpty ? all : filtered;
+  }
+
+  static const fallback = FormFlutterPhoneCountry(
+    isoCode: 'US',
+    name: 'United States',
+    dialCode: '+1',
+    maxNationalNumberLength: 10,
+  );
+}

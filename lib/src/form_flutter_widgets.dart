@@ -10,12 +10,14 @@ class DynamicFormFlutter extends StatefulWidget {
     required this.fields,
     required this.onSubmit,
     this.submitLabel = 'Submit',
+    this.header,
   });
 
   final FormFlutterController controller;
   final List<FormFlutterField<dynamic>> fields;
   final ValueChanged<FormFlutterValues> onSubmit;
   final String submitLabel;
+  final Widget? header;
 
   @override
   State<DynamicFormFlutter> createState() => _DynamicFormFlutterState();
@@ -68,23 +70,27 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Form Playground',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Build forms from definitions so validation and UX stay consistent across screens.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFF475467),
-              ),
-        ),
-        const SizedBox(height: 24),
-        for (final field in widget.fields) ...[
-          field.buildField(widget.controller),
-          const SizedBox(height: 16),
+        if (widget.header != null) ...[
+          widget.header!,
+        ] else ...[
+          Text(
+            'Form Playground',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Build forms from definitions so validation and UX stay consistent across screens.',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: const Color(0xFF475467),
+                ),
+          ),
+          const SizedBox(height: 24),
+          for (final field in widget.fields) ...[
+            field.buildField(widget.controller),
+            const SizedBox(height: 16),
+          ],
         ],
         SizedBox(
           width: double.infinity,

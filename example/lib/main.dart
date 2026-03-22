@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:form_flutter/form_flutter.dart';
 
@@ -50,6 +52,8 @@ class ExampleHomePage extends StatefulWidget {
 }
 
 class _ExampleHomePageState extends State<ExampleHomePage> {
+  Map<String, Object?>? _savedSnapshot;
+
   final FormFlutterController _controller = FormFlutterController(
     initialValues: const {
       'fullName': '',
@@ -255,6 +259,37 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
     ),
   ];
 
+  void _exportSnapshot() {
+    setState(() {
+      _savedSnapshot = _controller.toJson();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Serialized form state saved from controller.')),
+    );
+  }
+
+  void _importSnapshot() {
+    final savedSnapshot = _savedSnapshot;
+    if (savedSnapshot == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Export a snapshot first to import it.')),
+      );
+      return;
+    }
+
+    _controller.fromJson(savedSnapshot);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Controller restored from serialized state.')),
+    );
+  }
+
+  void _resetForm() {
+    _controller.reset();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Form reset to initial values.')),
+    );
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -304,13 +339,35 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'This sample uses decoration overrides, option colors, icons, a country-aware phone field, and a custom chip builder.',
+                                    'This sample uses decoration overrides, option colors, icons, a country-aware phone field, a custom chip builder, and controller serialization helpers.',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
                                         ?.copyWith(
                                           color: const Color(0xFF475467),
                                         ),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  Wrap(
+                                    spacing: 12,
+                                    runSpacing: 12,
+                                    children: [
+                                      FilledButton.icon(
+                                        onPressed: _exportSnapshot,
+                                        icon: const Icon(Icons.upload_file_outlined),
+                                        label: const Text('Export JSON'),
+                                      ),
+                                      OutlinedButton.icon(
+                                        onPressed: _importSnapshot,
+                                        icon: const Icon(Icons.download_outlined),
+                                        label: const Text('Import JSON'),
+                                      ),
+                                      TextButton.icon(
+                                        onPressed: _resetForm,
+                                        icon: const Icon(Icons.restart_alt_outlined),
+                                        label: const Text('Reset'),
+                                      ),
+                                    ],
                                   ),
                                   const SizedBox(height: 24),
                                   _ExampleGrid(
@@ -366,42 +423,9 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
 
                           final preview = _ExampleCard(
                             dark: true,
-                            child: ValueListenableBuilder<Map<String, Object?>>(
-                              valueListenable: _controller.valuesListenable,
-                              builder: (context, values, _) {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Live preview',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleLarge
-                                          ?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF111827),
-                                        borderRadius: BorderRadius.circular(18),
-                                      ),
-                                      child: Text(
-                                        values.toString(),
-                                        style: const TextStyle(
-                                          color: Color(0xFFE5E7EB),
-                                          fontFamily: 'monospace',
-                                          height: 1.5,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
+                            child: _ExampleStatePreview(
+                              controller: _controller,
+                              savedSnapshot: _savedSnapshot,
                             ),
                           );
 
@@ -433,6 +457,102 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ExampleStatePreview extends StatelessWidget {
+  const _ExampleStatePreview({
+    required this.controller,
+    required this.savedSnapshot,
+  });
+
+  final FormFlutterController controller;
+  final Map<String, Object?>? savedSnapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ValueListenableBuilder<Map<String, Object?>>(
+      valueListenable: controller.valuesListenable,
+      builder: (context, values, _) {
+        return ValueListenableBuilder<Map<String, bool>>(
+          valueListenable: controller.touchedFieldsListenable,
+          builder: (context, touchedFields, _) {
+            return ValueListenableBuilder<Map<String, bool>>(
+              valueListenable: controller.dirtyFieldsListenable,
+              builder: (context, dirtyFields, _) {
+                final touchedCount =
+                    touchedFields.values.where((value) => value).length;
+                final dirtyCount =
+                    dirtyFields.values.where((value) => value).length;
+                final currentJson = const JsonEncoder.withIndent('  ')
+                    .convert(controller.toJson());
+                final savedJson = savedSnapshot == null
+                    ? 'No exported snapshot yet.'
+                    : const JsonEncoder.withIndent('  ').convert(savedSnapshot);
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Live preview',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Watch values, serialized JSON, and touched/dirty state update together.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF94A3B8),
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _PreviewChip(
+                          label: 'Touched $touchedCount',
+                          tone: const Color(0xFF38BDF8),
+                        ),
+                        _PreviewChip(
+                          label: 'Dirty $dirtyCount',
+                          tone: const Color(0xFFF97316),
+                        ),
+                        _PreviewChip(
+                          label: controller.hasDirtyFields ? 'Unsaved' : 'Clean',
+                          tone: controller.hasDirtyFields
+                              ? const Color(0xFFEF4444)
+                              : const Color(0xFF22C55E),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _PreviewBlock(
+                      title: 'Values',
+                      content: values.toString(),
+                    ),
+                    const SizedBox(height: 14),
+                    _PreviewBlock(
+                      title: 'Current JSON',
+                      content: currentJson,
+                    ),
+                    const SizedBox(height: 14),
+                    _PreviewBlock(
+                      title: 'Last Exported JSON',
+                      content: savedJson,
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -488,7 +608,7 @@ class _ExampleCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: dark ? const Color(0xFF0F172A) : Colors.white.withOpacity(0.94),
+        color: dark ? const Color(0xFF0F172A) : Colors.white.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: dark ? const Color(0xFF1F2937) : const Color(0xFFD7E2F2),
@@ -535,6 +655,76 @@ class _ExampleGrid extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _PreviewBlock extends StatelessWidget {
+  const _PreviewBlock({
+    required this.title,
+    required this.content,
+  });
+
+  final String title;
+  final String content;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF111827),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFF1F2937)),
+          ),
+          child: Text(
+            content,
+            style: const TextStyle(
+              color: Color(0xFFE5E7EB),
+              fontFamily: 'monospace',
+              height: 1.5,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PreviewChip extends StatelessWidget {
+  const _PreviewChip({required this.label, required this.tone});
+
+  final String label;
+  final Color tone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: tone.withValues(alpha: 0.28)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: tone,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

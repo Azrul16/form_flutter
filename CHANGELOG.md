@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and follows the versioning used by the package.
 
+## 0.2.0
+
+- Improved release readiness with broader dartdoc coverage across the public API
+- Hardened controller serialization with explicit tagged `DateTime` encoding and optional legacy date-string decoding
+- Improved dynamic form async-validation handling for field lists built as `FormFlutterField<dynamic>`
+- Modernized core field behavior and reduced technical debt in form widgets
+- Expanded test coverage for controller serialization, reset flows, async validation, section visibility, and stepper flows
+- Verified the package with clean `flutter analyze`, passing tests, and `pub publish --dry-run`
+
 ## 0.1.0
 
 - Added controller serialization helpers with `toJson()` and `fromJson()` support for form values, `DateTime`, `TimeOfDay`, and `FormFlutterFileValue`

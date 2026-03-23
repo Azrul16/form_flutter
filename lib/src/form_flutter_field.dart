@@ -1,25 +1,31 @@
+import 'dart:ui' show PointMode;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'form_flutter_controller.dart';
 import 'form_flutter_phone_countries.dart';
 
+/// Synchronous validator signature used by form fields.
 typedef FormFlutterValidator<T> = String? Function(
   T value,
   FormFlutterValues values,
 );
 
+/// Asynchronous validator signature used by form fields.
 typedef FormFlutterAsyncValidator<T> = Future<String?> Function(
   T value,
   FormFlutterValues values,
 );
 
+/// Builds a custom widget for an option in dropdown, radio, or multiselect fields.
 typedef FormFlutterOptionBuilder<T> = Widget Function(
   BuildContext context,
   FormFlutterOption<T> option,
   bool isSelected,
 );
 
+/// Describes a selectable option for choice-based fields.
 class FormFlutterOption<T> {
   const FormFlutterOption({
     required this.value,
@@ -46,20 +52,24 @@ class FormFlutterOption<T> {
   final IconData? icon;
 }
 
+/// Lightweight file metadata container used by file and image fields.
 class FormFlutterFileValue {
   const FormFlutterFileValue({
     required this.name,
     required this.sizeInBytes,
     this.extension,
     this.mimeType,
+    this.bytes,
   });
 
   final String name;
   final int sizeInBytes;
   final String? extension;
   final String? mimeType;
+  final Uint8List? bytes;
 }
 
+/// Base abstraction for all field definitions rendered by the package.
 abstract class FormFlutterField<T> {
   const FormFlutterField({
     required this.name,
@@ -74,6 +84,9 @@ abstract class FormFlutterField<T> {
   final String? helperText;
   final FormFlutterValidator<T>? validator;
   final FormFlutterAsyncValidator<T>? asyncValidator;
+
+  /// Whether this field has an asynchronous validator.
+  bool get hasAsyncValidator => asyncValidator != null;
 
   T normalizeValue(Object? rawValue);
 
@@ -156,6 +169,7 @@ abstract class _FormFlutterInputField<T> extends FormFlutterField<T> {
   }
 }
 
+/// Single-line or multiline text input field.
 class FormFlutterTextField extends _FormFlutterInputField<String> {
   const FormFlutterTextField({
     required super.name,
@@ -194,7 +208,7 @@ class FormFlutterTextField extends _FormFlutterInputField<String> {
 
     final field = ValueListenableBuilder<Map<String, String?>>(
       valueListenable: controller.errorsListenable,
-      builder: (context, _, __) {
+      builder: (context, _, _) {
         return TextFormField(
           initialValue: normalizeValue(controller.snapshot.asMap()[name]),
           keyboardType: keyboardType,
@@ -219,6 +233,74 @@ class FormFlutterTextField extends _FormFlutterInputField<String> {
   }
 }
 
+/// OTP or verification-code input rendered as fixed slots.
+class FormFlutterOtpField extends _FormFlutterInputField<String> {
+  const FormFlutterOtpField({
+    required super.name,
+    required super.label,
+    this.length = 6,
+    this.allowPaste = true,
+    this.obscureText = false,
+    this.boxWidth = 44,
+    this.boxSpacing = 10,
+    super.helperText,
+    super.validator,
+    super.asyncValidator,
+    super.decorationOverride,
+    super.textStyle,
+  }) : super(hintText: null);
+
+  final int length;
+  final bool allowPaste;
+  final bool obscureText;
+  final double boxWidth;
+  final double boxSpacing;
+
+  @override
+  String normalizeValue(Object? rawValue) {
+    return (rawValue ?? '').toString();
+  }
+
+  @override
+  Widget buildField(FormFlutterController controller) {
+    final field = _FormFlutterOtpInput(
+      field: this,
+      controller: controller,
+    );
+    return allowPaste ? field : _FormFlutterPasteGuard(child: field);
+  }
+}
+
+/// Search text field with a search action and clear affordance.
+class FormFlutterSearchField extends _FormFlutterInputField<String> {
+  const FormFlutterSearchField({
+    required super.name,
+    required super.label,
+    this.onSubmitted,
+    super.hintText,
+    super.helperText,
+    super.validator,
+    super.asyncValidator,
+    super.decorationOverride,
+    super.textStyle,
+  });
+
+  final ValueChanged<String>? onSubmitted;
+
+  @override
+  String normalizeValue(Object? rawValue) {
+    return (rawValue ?? '').toString();
+  }
+
+  @override
+  Widget buildField(FormFlutterController controller) {
+    return _FormFlutterSearchInput(
+      field: this,
+      controller: controller,
+    );
+  }
+}
+
 class _FormFlutterPasswordField extends StatefulWidget {
   const _FormFlutterPasswordField({
     required this.field,
@@ -240,7 +322,7 @@ class _FormFlutterPasswordFieldState extends State<_FormFlutterPasswordField> {
   Widget build(BuildContext context) {
     final field = ValueListenableBuilder<Map<String, String?>>(
       valueListenable: widget.controller.errorsListenable,
-      builder: (context, _, __) {
+      builder: (context, _, _) {
         final baseDecoration = widget.field.decoration(
           widget.controller,
         );
@@ -301,6 +383,223 @@ class _FormFlutterPasteGuard extends StatelessWidget {
   }
 }
 
+class _FormFlutterOtpInput extends StatefulWidget {
+  const _FormFlutterOtpInput({
+    required this.field,
+    required this.controller,
+  });
+
+  final FormFlutterOtpField field;
+  final FormFlutterController controller;
+
+  @override
+  State<_FormFlutterOtpInput> createState() => _FormFlutterOtpInputState();
+}
+
+class _FormFlutterOtpInputState extends State<_FormFlutterOtpInput> {
+  late final TextEditingController _textController;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController(
+      text: widget.field.normalizeValue(
+        widget.controller.snapshot.asMap()[widget.field.name],
+      ),
+    );
+    _focusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Map<String, Object?>>(
+      valueListenable: widget.controller.valuesListenable,
+      builder: (context, values, _) {
+        final currentValue = widget.field.normalizeValue(values[widget.field.name]);
+        if (_textController.text != currentValue) {
+          _textController.value = TextEditingValue(
+            text: currentValue,
+            selection: TextSelection.collapsed(offset: currentValue.length),
+          );
+        }
+
+        return ValueListenableBuilder<Map<String, String?>>(
+          valueListenable: widget.controller.errorsListenable,
+          builder: (context, _, _) {
+            final slots = List<String>.generate(
+              widget.field.length,
+              (index) {
+                if (index >= currentValue.length) {
+                  return '';
+                }
+                return widget.field.obscureText ? '*' : currentValue[index];
+              },
+            );
+            return InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: _focusNode.requestFocus,
+              child: InputDecorator(
+                decoration: widget.field.decoration(widget.controller),
+                child: Stack(
+                  alignment: Alignment.centerLeft,
+                  children: [
+                    Opacity(
+                      opacity: 0,
+                      child: TextField(
+                        controller: _textController,
+                        focusNode: _focusNode,
+                        keyboardType: TextInputType.number,
+                        maxLength: widget.field.length,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(widget.field.length),
+                        ],
+                        onChanged: (value) {
+                          widget.controller.setValue(widget.field.name, value);
+                          widget.controller.setError(widget.field.name, null);
+                        },
+                        decoration: const InputDecoration(
+                          counterText: '',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ),
+                    IgnorePointer(
+                      child: Row(
+                        children: [
+                          for (var i = 0; i < slots.length; i++) ...[
+                            Container(
+                              width: widget.field.boxWidth,
+                              height: 54,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest
+                                    .withValues(alpha: 0.35),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: i == currentValue.length &&
+                                          _focusNode.hasFocus
+                                      ? Theme.of(context).colorScheme.primary
+                                      : const Color(0xFFD0D5DD),
+                                ),
+                              ),
+                              child: Text(
+                                slots[i],
+                                style: widget.field.textStyle ??
+                                    Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                            if (i != slots.length - 1)
+                              SizedBox(width: widget.field.boxSpacing),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _FormFlutterSearchInput extends StatefulWidget {
+  const _FormFlutterSearchInput({
+    required this.field,
+    required this.controller,
+  });
+
+  final FormFlutterSearchField field;
+  final FormFlutterController controller;
+
+  @override
+  State<_FormFlutterSearchInput> createState() => _FormFlutterSearchInputState();
+}
+
+class _FormFlutterSearchInputState extends State<_FormFlutterSearchInput> {
+  late final TextEditingController _textController;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController(
+      text: widget.field.normalizeValue(
+        widget.controller.snapshot.asMap()[widget.field.name],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Map<String, Object?>>(
+      valueListenable: widget.controller.valuesListenable,
+      builder: (context, values, _) {
+        final currentValue = widget.field.normalizeValue(values[widget.field.name]);
+        if (_textController.text != currentValue) {
+          _textController.value = TextEditingValue(
+            text: currentValue,
+            selection: TextSelection.collapsed(offset: currentValue.length),
+          );
+        }
+
+        return ValueListenableBuilder<Map<String, String?>>(
+          valueListenable: widget.controller.errorsListenable,
+          builder: (context, _, _) {
+            return TextFormField(
+              controller: _textController,
+              textInputAction: TextInputAction.search,
+              style: widget.field.textStyle,
+              onChanged: (value) {
+                widget.controller.setValue(widget.field.name, value);
+                widget.controller.setError(widget.field.name, null);
+              },
+              onFieldSubmitted: widget.field.onSubmitted,
+              decoration: widget.field.decoration(widget.controller).copyWith(
+                prefixIcon: widget.field.decorationOverride?.prefixIcon ??
+                    const Icon(Icons.search_rounded),
+                suffixIcon: currentValue.isEmpty
+                    ? widget.field.decorationOverride?.suffixIcon
+                    : IconButton(
+                        onPressed: () {
+                          _textController.clear();
+                          widget.controller.setValue(widget.field.name, '');
+                          widget.controller.setError(widget.field.name, null);
+                        },
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// Numeric text input field with optional decimal support.
 class FormFlutterNumberField extends _FormFlutterInputField<double?> {
   const FormFlutterNumberField({
     required super.name,
@@ -331,7 +630,7 @@ class FormFlutterNumberField extends _FormFlutterInputField<double?> {
   Widget buildField(FormFlutterController controller) {
     return ValueListenableBuilder<Map<String, String?>>(
       valueListenable: controller.errorsListenable,
-      builder: (context, _, __) {
+      builder: (context, _, _) {
         final existingValue = controller.snapshot.asMap()[name];
         final initialValue =
             existingValue == null ? '' : existingValue.toString();
@@ -353,6 +652,7 @@ class FormFlutterNumberField extends _FormFlutterInputField<double?> {
   }
 }
 
+/// Country-aware phone number field with national-number length rules.
 class FormFlutterPhoneField extends _FormFlutterInputField<String> {
   const FormFlutterPhoneField({
     required super.name,
@@ -421,6 +721,7 @@ class FormFlutterPhoneField extends _FormFlutterInputField<String> {
   }
 }
 
+/// Dropdown field populated from the built-in phone-country dataset.
 class FormFlutterCountryField extends FormFlutterDropdownField<String> {
   FormFlutterCountryField({
     required super.name,
@@ -432,7 +733,7 @@ class FormFlutterCountryField extends FormFlutterDropdownField<String> {
     super.validator,
     super.asyncValidator,
     super.hintText,
-    FormFlutterOptionBuilder<String>? optionBuilder,
+    super.optionBuilder,
     super.decorationOverride,
   }) : super(
           options: [
@@ -448,7 +749,6 @@ class FormFlutterCountryField extends FormFlutterDropdownField<String> {
                 ),
               ),
           ],
-          optionBuilder: optionBuilder,
         );
 }
 
@@ -520,7 +820,7 @@ class _FormFlutterPhoneInputState extends State<_FormFlutterPhoneInput> {
 
         return ValueListenableBuilder<Map<String, String?>>(
           valueListenable: widget.controller.errorsListenable,
-          builder: (context, __, ___) {
+          builder: (context, _, _) {
             return TextFormField(
               controller: _textController,
               keyboardType: TextInputType.phone,
@@ -986,6 +1286,7 @@ class _PhoneCountryPickerSheetState extends State<_PhoneCountryPickerSheet> {
   }
 }
 
+/// Generic dropdown field backed by typed options.
 class FormFlutterDropdownField<T> extends _FormFlutterInputField<T?> {
   const FormFlutterDropdownField({
     required super.name,
@@ -994,13 +1295,12 @@ class FormFlutterDropdownField<T> extends _FormFlutterInputField<T?> {
     super.helperText,
     super.validator,
     super.asyncValidator,
-    this.hintText,
+    super.hintText,
     this.optionBuilder,
     super.decorationOverride,
-  }) : super(hintText: null);
+  });
 
   final List<FormFlutterOption<T>> options;
-  final String? hintText;
   final FormFlutterOptionBuilder<T>? optionBuilder;
 
   @override
@@ -1015,9 +1315,9 @@ class FormFlutterDropdownField<T> extends _FormFlutterInputField<T?> {
       builder: (context, values, _) {
         return ValueListenableBuilder<Map<String, String?>>(
           valueListenable: controller.errorsListenable,
-          builder: (context, __, ___) {
+          builder: (context, _, _) {
             return DropdownButtonFormField<T>(
-              value: normalizeValue(values[name]),
+              initialValue: normalizeValue(values[name]),
               isExpanded: true,
               decoration: decoration(controller),
               items: [
@@ -1121,6 +1421,44 @@ class FormFlutterDropdownField<T> extends _FormFlutterInputField<T?> {
   }
 }
 
+class FormFlutterAutocompleteField<T extends Object>
+    extends FormFlutterField<T?> {
+  const FormFlutterAutocompleteField({
+    required super.name,
+    required super.label,
+    required this.options,
+    required this.displayStringForOption,
+    this.decoration,
+    this.hintText,
+    this.emptyStateText = 'No matches found.',
+    this.onQueryChanged,
+    super.helperText,
+    super.validator,
+    super.asyncValidator,
+  });
+
+  final List<T> options;
+  final String Function(T option) displayStringForOption;
+  final InputDecoration? decoration;
+  final String? hintText;
+  final String emptyStateText;
+  final ValueChanged<String>? onQueryChanged;
+
+  @override
+  T? normalizeValue(Object? rawValue) {
+    return rawValue as T?;
+  }
+
+  @override
+  Widget buildField(FormFlutterController controller) {
+    return _FormFlutterAutocompleteInput<T>(
+      field: this,
+      controller: controller,
+    );
+  }
+}
+
+/// Radio-group field for mutually exclusive option selection.
 class FormFlutterRadioGroupField<T> extends FormFlutterField<T?> {
   const FormFlutterRadioGroupField({
     required super.name,
@@ -1149,52 +1487,54 @@ class FormFlutterRadioGroupField<T> extends FormFlutterField<T?> {
       builder: (context, values, _) {
         return ValueListenableBuilder<Map<String, String?>>(
           valueListenable: controller.errorsListenable,
-          builder: (context, errors, __) {
+          builder: (context, errors, _) {
             final selected = normalizeValue(values[name]);
             return InputDecorator(
               decoration: _mergeDecoratorDecoration(errors[name]),
-              child: Column(
-                children: [
-                  for (final option in options)
-                    RadioListTile<T>(
-                      value: option.value,
-                      groupValue: selected,
-                      activeColor: option.color,
-                      fillColor: option.color == null
-                          ? null
-                          : MaterialStatePropertyAll<Color>(option.color!),
-                      title: optionBuilder?.call(
-                            context,
-                            option,
-                            selected == option.value,
-                          ) ??
-                          _FormFlutterOptionLabel(
-                            option: selected == option.value
-                                ? FormFlutterOption<T>(
-                                    value: option.value,
-                                    label: option.label,
-                                    color: option.color,
-                                    backgroundColor: option.backgroundColor,
-                                    selectedColor: option.selectedColor,
-                                    textColor: option.textColor,
-                                    selectedTextColor:
-                                        option.textColor ??
-                                        option.color ??
-                                        const Color(0xFF101828),
-                                    borderColor: option.borderColor,
-                                    indicatorSize: option.indicatorSize,
-                                    icon: option.icon,
-                                  )
-                                : option,
-                            isSelected: selected == option.value,
-                          ),
-                      contentPadding: EdgeInsets.zero,
-                      onChanged: (value) {
-                        controller.setValue(name, value);
-                        controller.setError(name, null);
-                      },
-                    ),
-                ],
+              child: RadioGroup<T>(
+                groupValue: selected,
+                onChanged: (value) {
+                  controller.setValue(name, value);
+                  controller.setError(name, null);
+                },
+                child: Column(
+                  children: [
+                    for (final option in options)
+                      RadioListTile<T>(
+                        value: option.value,
+                        activeColor: option.color,
+                        fillColor: option.color == null
+                            ? null
+                            : WidgetStatePropertyAll<Color>(option.color!),
+                        title: optionBuilder?.call(
+                              context,
+                              option,
+                              selected == option.value,
+                            ) ??
+                            _FormFlutterOptionLabel(
+                              option: selected == option.value
+                                  ? FormFlutterOption<T>(
+                                      value: option.value,
+                                      label: option.label,
+                                      color: option.color,
+                                      backgroundColor: option.backgroundColor,
+                                      selectedColor: option.selectedColor,
+                                      textColor: option.textColor,
+                                      selectedTextColor:
+                                          option.textColor ??
+                                          option.color ??
+                                          const Color(0xFF101828),
+                                      borderColor: option.borderColor,
+                                      indicatorSize: option.indicatorSize,
+                                      icon: option.icon,
+                                    )
+                                  : option,
+                              isSelected: selected == option.value,
+                            ),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                  ],
+                ),
               ),
             );
           },
@@ -1229,6 +1569,7 @@ class FormFlutterRadioGroupField<T> extends FormFlutterField<T?> {
   }
 }
 
+/// Checkbox field for boolean consent-style values.
 class FormFlutterCheckboxField extends FormFlutterField<bool> {
   const FormFlutterCheckboxField({
     required super.name,
@@ -1260,7 +1601,7 @@ class FormFlutterCheckboxField extends FormFlutterField<bool> {
         final checked = normalizeValue(values[name]);
         return ValueListenableBuilder<Map<String, String?>>(
           valueListenable: controller.errorsListenable,
-          builder: (context, errors, __) {
+          builder: (context, errors, _) {
             return InputDecorator(
               decoration: _mergeDecoratorDecoration(errors[name]),
               child: CheckboxListTile(
@@ -1305,6 +1646,7 @@ class FormFlutterCheckboxField extends FormFlutterField<bool> {
   }
 }
 
+/// Switch field for boolean on/off values.
 class FormFlutterSwitchField extends FormFlutterField<bool> {
   const FormFlutterSwitchField({
     required super.name,
@@ -1321,8 +1663,8 @@ class FormFlutterSwitchField extends FormFlutterField<bool> {
 
   final InputDecoration? decoration;
   final Color? activeColor;
-  final MaterialStateProperty<Color?>? thumbColor;
-  final MaterialStateProperty<Color?>? trackColor;
+  final WidgetStateProperty<Color?>? thumbColor;
+  final WidgetStateProperty<Color?>? trackColor;
   final TextStyle? titleStyle;
 
   @override
@@ -1338,12 +1680,13 @@ class FormFlutterSwitchField extends FormFlutterField<bool> {
         final currentValue = normalizeValue(values[name]);
         return ValueListenableBuilder<Map<String, String?>>(
           valueListenable: controller.errorsListenable,
-          builder: (context, errors, __) {
+          builder: (context, errors, _) {
             return InputDecorator(
               decoration: _mergeDecoratorDecoration(errors[name]),
               child: SwitchListTile(
                 value: currentValue,
-                activeColor: activeColor,
+                activeThumbColor: activeColor,
+                activeTrackColor: activeColor?.withValues(alpha: 0.35),
                 thumbColor: thumbColor,
                 trackColor: trackColor,
                 onChanged: (value) {
@@ -1383,6 +1726,139 @@ class FormFlutterSwitchField extends FormFlutterField<bool> {
   }
 }
 
+/// File picker field driven by a custom async picker callback.
+class FormFlutterFileField extends FormFlutterField<FormFlutterFileValue?> {
+  const FormFlutterFileField({
+    required super.name,
+    required super.label,
+    required this.onPick,
+    this.decoration,
+    this.pickButtonLabel = 'Choose file',
+    this.clearButtonLabel = 'Clear',
+    this.placeholder,
+    this.canClear = true,
+    this.leading,
+    super.helperText,
+    super.validator,
+    super.asyncValidator,
+  });
+
+  final Future<FormFlutterFileValue?> Function(
+    BuildContext context,
+    FormFlutterController controller,
+  ) onPick;
+  final InputDecoration? decoration;
+  final String pickButtonLabel;
+  final String clearButtonLabel;
+  final String? placeholder;
+  final bool canClear;
+  final Widget? leading;
+
+  @override
+  FormFlutterFileValue? normalizeValue(Object? rawValue) {
+    return rawValue as FormFlutterFileValue?;
+  }
+
+  @override
+  Widget buildField(FormFlutterController controller) {
+    return _FormFlutterFilePicker(
+      field: this,
+      controller: controller,
+    );
+  }
+}
+
+/// Image field with file-picker behavior plus preview support.
+class FormFlutterImageField extends FormFlutterFileField {
+  const FormFlutterImageField({
+    required super.name,
+    required super.label,
+    required super.onPick,
+    super.decoration,
+    super.pickButtonLabel,
+    super.clearButtonLabel,
+    super.placeholder,
+    super.canClear,
+    super.helperText,
+    super.validator,
+    super.asyncValidator,
+    this.previewHeight = 160,
+    this.previewFit = BoxFit.cover,
+    this.previewPlaceholder,
+  }) : super(
+          leading: const Icon(Icons.image_outlined),
+        );
+
+  final double previewHeight;
+  final BoxFit previewFit;
+  final Widget? previewPlaceholder;
+
+  @override
+  Widget buildField(FormFlutterController controller) {
+    return _FormFlutterImagePicker(
+      field: this,
+      controller: controller,
+    );
+  }
+}
+
+/// Signature pad field that stores one or more drawn strokes.
+class FormFlutterSignatureField extends FormFlutterField<List<List<Offset>>> {
+  const FormFlutterSignatureField({
+    required super.name,
+    required super.label,
+    this.decoration,
+    this.canvasHeight = 220,
+    this.strokeWidth = 2.6,
+    this.strokeColor,
+    this.backgroundColor,
+    this.clearButtonLabel = 'Clear signature',
+    this.placeholder = 'Sign inside the box.',
+    super.helperText,
+    super.validator,
+    super.asyncValidator,
+  });
+
+  final InputDecoration? decoration;
+  final double canvasHeight;
+  final double strokeWidth;
+  final Color? strokeColor;
+  final Color? backgroundColor;
+  final String clearButtonLabel;
+  final String placeholder;
+
+  @override
+  List<List<Offset>> normalizeValue(Object? rawValue) {
+    if (rawValue is List<List<Offset>>) {
+      return rawValue;
+    }
+    if (rawValue is List) {
+      return rawValue
+          .map<List<Offset>>((stroke) {
+            if (stroke is List<Offset>) {
+              return stroke;
+            }
+            if (stroke is List) {
+              return stroke.cast<Offset>();
+            }
+            return const <Offset>[];
+          })
+          .where((stroke) => stroke.isNotEmpty)
+          .toList(growable: false);
+    }
+    return const <List<Offset>>[];
+  }
+
+  @override
+  Widget buildField(FormFlutterController controller) {
+    return _FormFlutterSignaturePad(
+      field: this,
+      controller: controller,
+    );
+  }
+}
+
+/// Date picker field backed by `showDatePicker`.
 class FormFlutterDateField extends _FormFlutterInputField<DateTime?> {
   const FormFlutterDateField({
     required super.name,
@@ -1392,14 +1868,15 @@ class FormFlutterDateField extends _FormFlutterInputField<DateTime?> {
     super.asyncValidator,
     this.firstDate,
     this.lastDate,
-    this.hintText,
+    super.hintText,
+    this.dateFormatter,
     super.decorationOverride,
     super.textStyle,
-  }) : super(hintText: null);
+  });
 
   final DateTime? firstDate;
   final DateTime? lastDate;
-  final String? hintText;
+  final String Function(DateTime value)? dateFormatter;
 
   @override
   DateTime? normalizeValue(Object? rawValue) {
@@ -1417,10 +1894,10 @@ class FormFlutterDateField extends _FormFlutterInputField<DateTime?> {
         final selectedDate = normalizeValue(values[name]);
         final text = selectedDate == null
             ? (hintText ?? 'Select a date')
-            : _formatDate(selectedDate);
+            : (dateFormatter?.call(selectedDate) ?? _formatDate(selectedDate));
         return ValueListenableBuilder<Map<String, String?>>(
           valueListenable: controller.errorsListenable,
-          builder: (context, __, ___) {
+          builder: (context, _, _) {
             return InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () async {
@@ -1457,6 +1934,7 @@ class FormFlutterDateField extends _FormFlutterInputField<DateTime?> {
   }
 }
 
+/// Time picker field backed by `showTimePicker`.
 class FormFlutterTimeField extends _FormFlutterInputField<TimeOfDay?> {
   const FormFlutterTimeField({
     required super.name,
@@ -1464,12 +1942,13 @@ class FormFlutterTimeField extends _FormFlutterInputField<TimeOfDay?> {
     super.helperText,
     super.validator,
     super.asyncValidator,
-    this.hintText,
+    super.hintText,
+    this.timeFormatter,
     super.decorationOverride,
     super.textStyle,
-  }) : super(hintText: null);
+  });
 
-  final String? hintText;
+  final String Function(BuildContext context, TimeOfDay value)? timeFormatter;
 
   @override
   TimeOfDay? normalizeValue(Object? rawValue) {
@@ -1485,11 +1964,12 @@ class FormFlutterTimeField extends _FormFlutterInputField<TimeOfDay?> {
       valueListenable: controller.valuesListenable,
       builder: (context, values, _) {
         final selected = normalizeValue(values[name]);
-        final text =
-            selected == null ? (hintText ?? 'Select a time') : selected.format(context);
+        final text = selected == null
+            ? (hintText ?? 'Select a time')
+            : (timeFormatter?.call(context, selected) ?? selected.format(context));
         return ValueListenableBuilder<Map<String, String?>>(
           valueListenable: controller.errorsListenable,
-          builder: (context, __, ___) {
+          builder: (context, _, _) {
             return InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () async {
@@ -1517,6 +1997,7 @@ class FormFlutterTimeField extends _FormFlutterInputField<TimeOfDay?> {
   }
 }
 
+/// Combined date and time picker field.
 class FormFlutterDateTimeField extends _FormFlutterInputField<DateTime?> {
   const FormFlutterDateTimeField({
     required super.name,
@@ -1526,14 +2007,16 @@ class FormFlutterDateTimeField extends _FormFlutterInputField<DateTime?> {
     super.asyncValidator,
     this.firstDate,
     this.lastDate,
-    this.hintText,
+    super.hintText,
+    this.dateTimeFormatter,
     super.decorationOverride,
     super.textStyle,
-  }) : super(hintText: null);
+  });
 
   final DateTime? firstDate;
   final DateTime? lastDate;
-  final String? hintText;
+  final String Function(BuildContext context, DateTime value)?
+      dateTimeFormatter;
 
   @override
   DateTime? normalizeValue(Object? rawValue) {
@@ -1551,10 +2034,11 @@ class FormFlutterDateTimeField extends _FormFlutterInputField<DateTime?> {
         final selected = normalizeValue(values[name]);
         final text = selected == null
             ? (hintText ?? 'Select date and time')
-            : _formatDateTime(context, selected);
+            : (dateTimeFormatter?.call(context, selected) ??
+                _formatDateTime(context, selected));
         return ValueListenableBuilder<Map<String, String?>>(
           valueListenable: controller.errorsListenable,
-          builder: (context, __, ___) {
+          builder: (context, _, _) {
             return InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () async {
@@ -1610,6 +2094,7 @@ class FormFlutterDateTimeField extends _FormFlutterInputField<DateTime?> {
   }
 }
 
+/// Slider field for selecting a numeric value within a range.
 class FormFlutterSliderField extends FormFlutterField<double> {
   const FormFlutterSliderField({
     required super.name,
@@ -1653,7 +2138,7 @@ class FormFlutterSliderField extends FormFlutterField<double> {
       builder: (context, values, _) {
         return ValueListenableBuilder<Map<String, String?>>(
           valueListenable: controller.errorsListenable,
-          builder: (context, errors, __) {
+          builder: (context, errors, _) {
             final currentValue = normalizeValue(values[name]);
             final displayValue = currentValue % 1 == 0
                 ? currentValue.toStringAsFixed(0)
@@ -1715,6 +2200,7 @@ class FormFlutterSliderField extends FormFlutterField<double> {
   }
 }
 
+/// Multi-select field that stores a list of selected values.
 class FormFlutterMultiSelectField<T> extends FormFlutterField<List<T>> {
   const FormFlutterMultiSelectField({
     required super.name,
@@ -1750,7 +2236,7 @@ class FormFlutterMultiSelectField<T> extends FormFlutterField<List<T>> {
         final selected = normalizeValue(values[name]);
         return ValueListenableBuilder<Map<String, String?>>(
           valueListenable: controller.errorsListenable,
-          builder: (context, errors, __) {
+          builder: (context, errors, _) {
             return InputDecorator(
               decoration: _mergeDecoratorDecoration(errors[name]),
               child: Wrap(
@@ -1866,6 +2352,503 @@ class FormFlutterMultiSelectField<T> extends FormFlutterField<List<T>> {
   }
 }
 
+class _FormFlutterAutocompleteInput<T extends Object> extends StatefulWidget {
+  const _FormFlutterAutocompleteInput({
+    required this.field,
+    required this.controller,
+  });
+
+  final FormFlutterAutocompleteField<T> field;
+  final FormFlutterController controller;
+
+  @override
+  State<_FormFlutterAutocompleteInput<T>> createState() =>
+      _FormFlutterAutocompleteInputState<T>();
+}
+
+class _FormFlutterAutocompleteInputState<T extends Object>
+    extends State<_FormFlutterAutocompleteInput<T>> {
+  late final TextEditingController _textController;
+
+  @override
+  void initState() {
+    super.initState();
+    final currentValue = widget.field.normalizeValue(
+      widget.controller.snapshot.asMap()[widget.field.name],
+    );
+    _textController = TextEditingController(
+      text: currentValue == null
+          ? ''
+          : widget.field.displayStringForOption(currentValue),
+    );
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Map<String, Object?>>(
+      valueListenable: widget.controller.valuesListenable,
+      builder: (context, values, _) {
+        final currentValue = widget.field.normalizeValue(values[widget.field.name]);
+        final currentLabel = currentValue == null
+            ? ''
+            : widget.field.displayStringForOption(currentValue);
+        if (_textController.text != currentLabel &&
+            !_textController.value.composing.isValid) {
+          _textController.value = TextEditingValue(
+            text: currentLabel,
+            selection: TextSelection.collapsed(offset: currentLabel.length),
+          );
+        }
+
+        return ValueListenableBuilder<Map<String, String?>>(
+          valueListenable: widget.controller.errorsListenable,
+          builder: (context, _, _) {
+            return Autocomplete<T>(
+              initialValue: TextEditingValue(text: currentLabel),
+              displayStringForOption: widget.field.displayStringForOption,
+              optionsBuilder: (textEditingValue) {
+                final query = textEditingValue.text.trim().toLowerCase();
+                widget.field.onQueryChanged?.call(textEditingValue.text);
+                if (query.isEmpty) {
+                  return widget.field.options;
+                }
+                return widget.field.options.where((option) {
+                  return widget.field
+                      .displayStringForOption(option)
+                      .toLowerCase()
+                      .contains(query);
+                });
+              },
+              onSelected: (selection) {
+                final label = widget.field.displayStringForOption(selection);
+                widget.controller.setValue(widget.field.name, selection);
+                widget.controller.setError(widget.field.name, null);
+                _textController.value = TextEditingValue(
+                  text: label,
+                  selection: TextSelection.collapsed(offset: label.length),
+                );
+              },
+              fieldViewBuilder: (
+                context,
+                textEditingController,
+                focusNode,
+                onFieldSubmitted,
+              ) {
+                if (_textController.text != textEditingController.text) {
+                  textEditingController.value = _textController.value;
+                }
+                return TextFormField(
+                  controller: textEditingController,
+                  focusNode: focusNode,
+                  onChanged: (value) {
+                    if (value.isEmpty) {
+                      widget.controller.setValue(widget.field.name, null);
+                      widget.controller.setError(widget.field.name, null);
+                    }
+                  },
+                  decoration: _mergeDecoratorDecoration(
+                    widget.field.label,
+                    widget.field.helperText,
+                    widget.controller.error(widget.field.name),
+                    widget.field.decoration,
+                    hintText: widget.field.hintText,
+                  ).copyWith(
+                    prefixIcon: widget.field.decoration?.prefixIcon ??
+                        const Icon(Icons.auto_awesome_outlined),
+                  ),
+                );
+              },
+              optionsViewBuilder: (context, onSelected, options) {
+                final optionsList = options.toList(growable: false);
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Material(
+                    elevation: 6,
+                    borderRadius: BorderRadius.circular(16),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: 420,
+                        maxHeight: 240,
+                      ),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shrinkWrap: true,
+                        itemCount: optionsList.length,
+                        itemBuilder: (context, index) {
+                          final option = optionsList[index];
+                          return ListTile(
+                            title: Text(
+                              widget.field.displayStringForOption(option),
+                            ),
+                            onTap: () => onSelected(option),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _FormFlutterFilePicker extends StatefulWidget {
+  const _FormFlutterFilePicker({
+    required this.field,
+    required this.controller,
+  });
+
+  final FormFlutterFileField field;
+  final FormFlutterController controller;
+
+  @override
+  State<_FormFlutterFilePicker> createState() => _FormFlutterFilePickerState();
+}
+
+class _FormFlutterFilePickerState extends State<_FormFlutterFilePicker> {
+  bool _loading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Map<String, Object?>>(
+      valueListenable: widget.controller.valuesListenable,
+      builder: (context, values, _) {
+        final file = widget.field.normalizeValue(values[widget.field.name]);
+        return ValueListenableBuilder<Map<String, String?>>(
+          valueListenable: widget.controller.errorsListenable,
+          builder: (context, errors, _) {
+            return InputDecorator(
+              decoration: _mergeDecoratorDecoration(
+                widget.field.label,
+                widget.field.helperText,
+                errors[widget.field.name],
+                widget.field.decoration,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      widget.field.leading ??
+                          const Icon(Icons.attach_file_rounded),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              file?.name ??
+                                  widget.field.placeholder ??
+                                  'No file selected.',
+                            ),
+                            if (file != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                _describeFile(file),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: const Color(0xFF667085),
+                                    ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: _loading
+                            ? null
+                            : () async {
+                                setState(() {
+                                  _loading = true;
+                                });
+                                final picked = await widget.field.onPick(
+                                  context,
+                                  widget.controller,
+                                );
+                                if (!mounted) {
+                                  return;
+                                }
+                                if (picked != null) {
+                                  widget.controller
+                                      .setValue(widget.field.name, picked);
+                                  widget.controller
+                                      .setError(widget.field.name, null);
+                                }
+                                setState(() {
+                                  _loading = false;
+                                });
+                              },
+                        icon: Icon(
+                          _loading
+                              ? Icons.hourglass_top_rounded
+                              : Icons.upload_file_outlined,
+                        ),
+                        label: Text(widget.field.pickButtonLabel),
+                      ),
+                      if (widget.field.canClear && file != null)
+                        TextButton(
+                          onPressed: () {
+                            widget.controller.setValue(widget.field.name, null);
+                            widget.controller.setError(widget.field.name, null);
+                          },
+                          child: Text(widget.field.clearButtonLabel),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _FormFlutterImagePicker extends StatelessWidget {
+  const _FormFlutterImagePicker({
+    required this.field,
+    required this.controller,
+  });
+
+  final FormFlutterImageField field;
+  final FormFlutterController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Map<String, Object?>>(
+      valueListenable: controller.valuesListenable,
+      builder: (context, values, _) {
+        final file = field.normalizeValue(values[field.name]);
+        final preview = file?.bytes == null
+            ? field.previewPlaceholder ??
+                Container(
+                  height: field.previewHeight,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2F4F7),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.image_outlined, size: 36),
+                )
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.memory(
+                  file!.bytes!,
+                  height: field.previewHeight,
+                  width: double.infinity,
+                  fit: field.previewFit,
+                ),
+              );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            preview,
+            const SizedBox(height: 12),
+            _FormFlutterFilePicker(
+              field: field,
+              controller: controller,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _FormFlutterSignaturePad extends StatefulWidget {
+  const _FormFlutterSignaturePad({
+    required this.field,
+    required this.controller,
+  });
+
+  final FormFlutterSignatureField field;
+  final FormFlutterController controller;
+
+  @override
+  State<_FormFlutterSignaturePad> createState() =>
+      _FormFlutterSignaturePadState();
+}
+
+class _FormFlutterSignaturePadState extends State<_FormFlutterSignaturePad> {
+  late List<List<Offset>> _strokes;
+  bool _drawing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _strokes = List<List<Offset>>.from(
+      widget.field.normalizeValue(
+        widget.controller.snapshot.asMap()[widget.field.name],
+      ).map((stroke) => List<Offset>.from(stroke)),
+    );
+  }
+
+  void _syncController() {
+    widget.controller.setValue(
+      widget.field.name,
+      _strokes.map((stroke) => List<Offset>.from(stroke)).toList(growable: false),
+    );
+    widget.controller.setError(widget.field.name, null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Map<String, String?>>(
+      valueListenable: widget.controller.errorsListenable,
+      builder: (context, errors, _) {
+        return InputDecorator(
+          decoration: _mergeDecoratorDecoration(
+            widget.field.label,
+            widget.field.helperText,
+            errors[widget.field.name],
+            widget.field.decoration,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: ColoredBox(
+                  color:
+                      widget.field.backgroundColor ?? const Color(0xFFF8FAFC),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: widget.field.canvasHeight,
+                    child: GestureDetector(
+                      onPanStart: (details) {
+                        setState(() {
+                          _drawing = true;
+                          _strokes.add([details.localPosition]);
+                        });
+                        _syncController();
+                      },
+                      onPanUpdate: (details) {
+                        if (!_drawing || _strokes.isEmpty) {
+                          return;
+                        }
+                        setState(() {
+                          _strokes.last.add(details.localPosition);
+                        });
+                        _syncController();
+                      },
+                      onPanEnd: (_) {
+                        setState(() {
+                          _drawing = false;
+                        });
+                      },
+                      child: CustomPaint(
+                        painter: _FormFlutterSignaturePainter(
+                          strokes: _strokes,
+                          strokeColor: widget.field.strokeColor ??
+                              Theme.of(context).colorScheme.primary,
+                          strokeWidth: widget.field.strokeWidth,
+                        ),
+                        child: _strokes.isEmpty
+                            ? Center(
+                                child: Text(
+                                  widget.field.placeholder,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: const Color(0xFF667085),
+                                      ),
+                                ),
+                              )
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _strokes.isEmpty
+                      ? null
+                      : () {
+                          setState(() {
+                            _strokes = <List<Offset>>[];
+                          });
+                          _syncController();
+                        },
+                  icon: const Icon(Icons.restart_alt_outlined),
+                  label: Text(widget.field.clearButtonLabel),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FormFlutterSignaturePainter extends CustomPainter {
+  const _FormFlutterSignaturePainter({
+    required this.strokes,
+    required this.strokeColor,
+    required this.strokeWidth,
+  });
+
+  final List<List<Offset>> strokes;
+  final Color strokeColor;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = strokeColor
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    for (final stroke in strokes) {
+      if (stroke.length == 1) {
+        canvas.drawPoints(PointMode.points, stroke, paint);
+        continue;
+      }
+
+      final path = Path()..moveTo(stroke.first.dx, stroke.first.dy);
+      for (var i = 1; i < stroke.length; i++) {
+        path.lineTo(stroke[i].dx, stroke[i].dy);
+      }
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _FormFlutterSignaturePainter oldDelegate) {
+    return oldDelegate.strokes != strokes ||
+        oldDelegate.strokeColor != strokeColor ||
+        oldDelegate.strokeWidth != strokeWidth;
+  }
+}
+
 class _FormFlutterOptionLabel<T> extends StatelessWidget {
   const _FormFlutterOptionLabel({
     required this.option,
@@ -1935,4 +2918,60 @@ Color? _foregroundColorFor(Color? backgroundColor) {
   return ThemeData.estimateBrightnessForColor(backgroundColor) == Brightness.dark
       ? Colors.white
       : const Color(0xFF101828);
+}
+
+InputDecoration _mergeDecoratorDecoration(
+  String? label,
+  String? helperText,
+  String? errorText,
+  InputDecoration? decoration, {
+  String? hintText,
+}) {
+  final base = InputDecoration(
+    labelText: label,
+    hintText: hintText,
+    helperText: helperText,
+    errorText: errorText,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+  );
+  return base.copyWith(
+    filled: decoration?.filled,
+    fillColor: decoration?.fillColor,
+    contentPadding: decoration?.contentPadding,
+    border: decoration?.border ?? base.border,
+    enabledBorder: decoration?.enabledBorder,
+    focusedBorder: decoration?.focusedBorder,
+    errorBorder: decoration?.errorBorder,
+    focusedErrorBorder: decoration?.focusedErrorBorder,
+    labelStyle: decoration?.labelStyle,
+    floatingLabelStyle: decoration?.floatingLabelStyle,
+    helperStyle: decoration?.helperStyle,
+    hintStyle: decoration?.hintStyle,
+    errorStyle: decoration?.errorStyle,
+    prefixIcon: decoration?.prefixIcon,
+    suffixIcon: decoration?.suffixIcon,
+    icon: decoration?.icon,
+  );
+}
+
+String _describeFile(FormFlutterFileValue file) {
+  final extension = (file.extension == null || file.extension!.isEmpty)
+      ? null
+      : file.extension!.toUpperCase();
+  final type = extension ?? file.mimeType ?? 'File';
+  return '$type - ${_formatFileSize(file.sizeInBytes)}';
+}
+
+String _formatFileSize(int bytes) {
+  const units = ['B', 'KB', 'MB', 'GB'];
+  var value = bytes.toDouble();
+  var unitIndex = 0;
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex++;
+  }
+  final precision = unitIndex == 0 ? 0 : 1;
+  return '${value.toStringAsFixed(precision)} ${units[unitIndex]}';
 }

@@ -91,6 +91,13 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
       'satisfactionScore': 72.0,
       'newsletter': true,
       'acceptTerms': false,
+      'otpCode': '',
+      'companySearch': '',
+      'city': null,
+      'resume': null,
+      'avatar': null,
+      'signature': <List<Offset>>[],
+      'meetingMode': 'online',
     },
   );
 
@@ -184,6 +191,12 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
       obscureText: true,
       allowPaste: false,
       validator: FormFlutterPresetValidators.confirmPassword('password'),
+    ),
+    FormFlutterOtpField(
+      name: 'otpCode',
+      label: 'Verification code',
+      helperText: 'A custom OTP input with package-managed state.',
+      validator: FormFlutterPresetValidators.otp(),
     ),
     FormFlutterNumberField(
       name: 'experience',
@@ -358,12 +371,16 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
       hintText: 'Select date',
       firstDate: DateTime(2020),
       lastDate: DateTime(2035),
+      dateFormatter: (value) =>
+          '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}',
       validator: FormFlutterValidators.requiredDate(),
     ),
     FormFlutterTimeField(
       name: 'supportTime',
       label: 'Support time',
       hintText: 'Select time',
+      timeFormatter: (context, value) =>
+          '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}',
       validator: FormFlutterValidators.requiredTime(),
     ),
     FormFlutterDateTimeField(
@@ -377,7 +394,151 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
       label: 'I accept terms and privacy policy',
       validator: FormFlutterValidators.mustBeTrue(),
     ),
+    FormFlutterSearchField(
+      name: 'companySearch',
+      label: 'Workspace search',
+      hintText: 'Search teams, flows, docs',
+      helperText: 'Reusable search field with clear affordance.',
+    ),
+    FormFlutterAutocompleteField<String>(
+      name: 'city',
+      label: 'Launch city',
+      hintText: 'Start typing a city',
+      options: const ['Dhaka', 'Tokyo', 'Berlin', 'Nairobi', 'Toronto'],
+      displayStringForOption: (option) => option,
+      validator: FormFlutterValidators.requiredSelection<String>(),
+    ),
+    FormFlutterFileField(
+      name: 'resume',
+      label: 'Requirements doc',
+      helperText: 'Simulated file picker so the package stays plugin-light.',
+      onPick: _pickDemoFile,
+      validator: FormFlutterValidators.requiredFile(),
+    ),
+    FormFlutterImageField(
+      name: 'avatar',
+      label: 'Cover image',
+      helperText: 'Image field with built-in preview support.',
+      onPick: _pickDemoImage,
+      validator: FormFlutterValidators.combine<FormFlutterFileValue?>([
+        FormFlutterValidators.requiredFile(),
+        FormFlutterValidators.imageOnly(),
+      ]),
+    ),
+    FormFlutterSignatureField(
+      name: 'signature',
+      label: 'Approval signature',
+      helperText: 'Draw directly on canvas and keep the points serializable.',
+      validator: FormFlutterValidators.requiredValue<List<List<Offset>>>(),
+    ),
   ];
+
+  late final List<FormFlutterField<dynamic>> _factoryFields =
+      FormFlutterFieldFactory.buildFieldsFromPresets(
+        const [
+          FormFlutterFieldPreset(
+            key: 'meetingMode',
+            label: 'Meeting mode',
+            kind: FormFlutterFieldKind.autocomplete,
+            category: FormFlutterFieldCategory.appointment,
+            isRequired: true,
+            options: FormFlutterOptionSets.meetingModes,
+          ),
+        ],
+      );
+
+  late final List<FormFlutterSection> _sections = [
+    FormFlutterSection(
+      title: 'Registration',
+      description:
+          'Core identity, password, and OTP fields with sync and async validation.',
+      fields: [
+        _fields[0],
+        _fields[1],
+        _fields[2],
+        _fields[3],
+        _fields[5],
+        _fields[6],
+        _fields[7],
+      ],
+    ),
+    FormFlutterSection(
+      title: 'Project details',
+      description: 'Profile, role, plan, and colored option widgets.',
+      fields: [
+        _fields[4],
+        _fields[8],
+        _fields[9],
+        _fields[10],
+        _fields[11],
+        _fields[12],
+        _fields[13],
+      ],
+    ),
+    FormFlutterSection(
+      title: 'Schedule',
+      description: 'Date and time fields now support formatter hooks.',
+      fields: [
+        _fields[14],
+        _fields[15],
+        _fields[16],
+        _factoryFields.first,
+      ],
+    ),
+    FormFlutterSection(
+      title: 'New field kinds',
+      description:
+          'Search, autocomplete, file/image preview, and serializable signature capture.',
+      fields: [
+        _fields[19],
+        _fields[20],
+        _fields[21],
+        _fields[22],
+        _fields[23],
+      ],
+    ),
+    FormFlutterSection(
+      title: 'Consent',
+      description: 'Stepper footer, validation summary, and submit guards.',
+      fields: [
+        _fields[17],
+        _fields[18],
+      ],
+    ),
+  ];
+
+  static Future<FormFlutterFileValue?> _pickDemoFile(
+    BuildContext context,
+    FormFlutterController controller,
+  ) async {
+    return FormFlutterFileValue(
+      name: 'project-brief.pdf',
+      sizeInBytes: 24816,
+      extension: 'pdf',
+      mimeType: 'application/pdf',
+      bytes: Uint8List.fromList(List<int>.generate(24, (index) => index)),
+    );
+  }
+
+  static Future<FormFlutterFileValue?> _pickDemoImage(
+    BuildContext context,
+    FormFlutterController controller,
+  ) async {
+    return FormFlutterFileValue(
+      name: 'cover.png',
+      sizeInBytes: _demoImageBytes.length,
+      extension: 'png',
+      mimeType: 'image/png',
+      bytes: _demoImageBytes,
+    );
+  }
+
+  static final Uint8List _demoImageBytes = Uint8List.fromList(const [
+    137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1,
+    0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84,
+    120, 156, 99, 248, 207, 192, 240, 31, 0, 5, 0, 1, 255, 137, 153, 61, 29,
+    0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
+  ]);
 
   void _exportSnapshot() {
     setState(() {
@@ -478,7 +639,7 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(32),
         border: Border.all(color: const Color(0xFFD7E4E2)),
         boxShadow: const [
@@ -492,7 +653,14 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
       child: DynamicFormFlutter(
         controller: _controller,
         fields: _fields,
+        sections: _sections,
         submitLabel: 'Create Form',
+        useStepper: true,
+        showValidationSummary: true,
+        disableSubmitUntilDirty: true,
+        scrollToFirstError: true,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        renderFieldsAfterHeader: true,
         header: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -502,7 +670,7 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
             ),
             const _SectionSummary(
               text:
-                  'A polished package demo with validations, styled options, password controls, scheduling inputs, and controller serialization helpers.',
+                  'A polished package demo with sections, stepper navigation, validation summaries, formatter hooks, field factory output, file previews, and signature capture.',
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -526,65 +694,6 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
                 ),
               ],
             ),
-            _ResponsiveFieldGrid(
-              children: [
-                _FieldCard(child: _fields[0].buildField(_controller)),
-                _FieldCard(child: _fields[1].buildField(_controller)),
-                _FieldCard(child: _fields[2].buildField(_controller)),
-                _FieldCard(child: _fields[3].buildField(_controller)),
-              ],
-            ),
-            const SizedBox(height: 20),
-            const _SectionHeader(eyebrow: 'Profile', title: 'Project details'),
-            _FieldCard(child: _fields[4].buildField(_controller)),
-            const SizedBox(height: 12),
-            _ResponsiveFieldGrid(
-              children: [
-                _FieldCard(child: _fields[5].buildField(_controller)),
-                _FieldCard(child: _fields[6].buildField(_controller)),
-                _FieldCard(child: _fields[7].buildField(_controller)),
-                _FieldCard(child: _fields[8].buildField(_controller)),
-              ],
-            ),
-            const SizedBox(height: 20),
-            const _SectionHeader(
-              eyebrow: 'Preferences',
-              title: 'Colored options',
-            ),
-            const _SectionSummary(
-              text:
-                  'Selected dropdown values now invert against their background so the active choice stays readable.',
-            ),
-            _ResponsiveFieldGrid(
-              children: [
-                _FieldCard(child: _fields[9].buildField(_controller)),
-                _FieldCard(child: _fields[10].buildField(_controller)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _FieldCard(child: _fields[11].buildField(_controller)),
-            const SizedBox(height: 12),
-            _FieldCard(child: _fields[12].buildField(_controller)),
-            const SizedBox(height: 12),
-            _FieldCard(child: _fields[13].buildField(_controller)),
-            const SizedBox(height: 20),
-            const _SectionHeader(eyebrow: 'Schedule', title: 'Planning'),
-            const _SectionSummary(
-              text:
-                  'Use date, time, and date-time pickers together for a complete workflow.',
-            ),
-            _ResponsiveFieldGrid(
-              children: [
-                _FieldCard(child: _fields[14].buildField(_controller)),
-                _FieldCard(child: _fields[15].buildField(_controller)),
-                _FieldCard(child: _fields[16].buildField(_controller)),
-              ],
-            ),
-            const SizedBox(height: 20),
-            const _SectionHeader(eyebrow: 'Final', title: 'Consent'),
-            _FieldCard(child: _fields[17].buildField(_controller)),
-            const SizedBox(height: 12),
-            _FieldCard(child: _fields[18].buildField(_controller)),
             const SizedBox(height: 24),
           ],
         ),
@@ -637,10 +746,10 @@ class _PlaygroundStatePreview extends StatelessWidget {
       builder: (context, values, _) {
         return ValueListenableBuilder<Map<String, bool>>(
           valueListenable: controller.touchedFieldsListenable,
-          builder: (context, touchedFields, __) {
+          builder: (context, touchedFields, _) {
             return ValueListenableBuilder<Map<String, bool>>(
               valueListenable: controller.dirtyFieldsListenable,
-              builder: (context, dirtyFields, ___) {
+              builder: (context, dirtyFields, _) {
                 final touchedCount = touchedFields.values
                     .where((value) => value)
                     .length;
@@ -894,84 +1003,6 @@ class _SectionSummary extends StatelessWidget {
   }
 }
 
-class _ResponsiveFieldGrid extends StatelessWidget {
-  const _ResponsiveFieldGrid({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final twoColumns = constraints.maxWidth > 700;
-        if (!twoColumns) {
-          return Column(
-            children: [
-              for (var i = 0; i < children.length; i++) ...[
-                children[i],
-                if (i != children.length - 1) const SizedBox(height: 12),
-              ],
-            ],
-          );
-        }
-
-        final rows = <Widget>[];
-        for (var i = 0; i < children.length; i += 2) {
-          rows.add(
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: children[i]),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: i + 1 < children.length
-                      ? children[i + 1]
-                      : const SizedBox.shrink(),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return Column(
-          children: [
-            for (var i = 0; i < rows.length; i++) ...[
-              rows[i],
-              if (i != rows.length - 1) const SizedBox(height: 12),
-            ],
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _FieldCard extends StatelessWidget {
-  const _FieldCard({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FBFC),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A0F172A),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
-}
-
 class _SummaryBlock extends StatelessWidget {
   const _SummaryBlock({required this.title, required this.content});
 
@@ -1024,9 +1055,9 @@ class _PreviewChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: tone.withOpacity(0.18),
+        color: tone.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: tone.withOpacity(0.28)),
+        border: Border.all(color: tone.withValues(alpha: 0.28)),
       ),
       child: Text(
         label,

@@ -3,6 +3,49 @@ import 'package:flutter/material.dart';
 import 'form_flutter_controller.dart';
 import 'form_flutter_field.dart';
 
+/// Customizable default validation messages used by `FormFlutterValidators`.
+class FormFlutterValidationMessages {
+  const FormFlutterValidationMessages({
+    this.requiredText = 'This field is required.',
+    this.email = 'Enter a valid email address.',
+    this.phone = 'Enter a valid phone number.',
+    this.url = 'Enter a valid URL.',
+    this.numericText = 'Use numbers only.',
+    this.sameAsField = 'This value does not match.',
+    this.requiredNumber = 'Enter a number.',
+    this.requiredSelection = 'Make a selection.',
+    this.mustBeTrue = 'This field must be accepted.',
+    this.requiredDate = 'Select a date.',
+    this.requiredTime = 'Select a time.',
+    this.requiredFile = 'Select a file.',
+    this.imageOnly = 'Only image files are allowed.',
+    this.uniqueValue = 'This value is already in use.',
+    this.uniqueUsername = 'This username is already taken.',
+    this.uniqueEmail = 'This email is already registered.',
+  });
+
+  static FormFlutterValidationMessages current =
+      const FormFlutterValidationMessages();
+
+  final String requiredText;
+  final String email;
+  final String phone;
+  final String url;
+  final String numericText;
+  final String sameAsField;
+  final String requiredNumber;
+  final String requiredSelection;
+  final String mustBeTrue;
+  final String requiredDate;
+  final String requiredTime;
+  final String requiredFile;
+  final String imageOnly;
+  final String uniqueValue;
+  final String uniqueUsername;
+  final String uniqueEmail;
+}
+
+/// Built-in validator helpers for common field validation rules.
 abstract final class FormFlutterValidators {
   static FormFlutterValidator<T> combine<T>(
     List<FormFlutterValidator<T>> validators,
@@ -33,20 +76,23 @@ abstract final class FormFlutterValidators {
   }
 
   static FormFlutterValidator<String> requiredText({
-    String message = 'This field is required.',
+    String? message,
   }) {
-    return (value, _) => value.trim().isEmpty ? message : null;
+    return (value, _) =>
+        value.trim().isEmpty ? (message ?? FormFlutterValidationMessages.current.requiredText) : null;
   }
 
   static FormFlutterValidator<String> email({
-    String message = 'Enter a valid email address.',
+    String? message,
   }) {
     final pattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
     return (value, _) {
       if (value.trim().isEmpty) {
         return null;
       }
-      return pattern.hasMatch(value.trim()) ? null : message;
+      return pattern.hasMatch(value.trim())
+          ? null
+          : (message ?? FormFlutterValidationMessages.current.email);
     };
   }
 
@@ -99,63 +145,69 @@ abstract final class FormFlutterValidators {
   }
 
   static FormFlutterValidator<String> phone({
-    String message = 'Enter a valid phone number.',
+    String? message,
   }) {
     return pattern(
       RegExp(r'^\+?[0-9 ()-]{7,20}$'),
-      message: message,
+      message: message ?? FormFlutterValidationMessages.current.phone,
     );
   }
 
   static FormFlutterValidator<String> url({
-    String message = 'Enter a valid URL.',
+    String? message,
   }) {
     return pattern(
       RegExp(r'^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/\S*)?$'),
-      message: message,
+      message: message ?? FormFlutterValidationMessages.current.url,
     );
   }
 
   static FormFlutterValidator<String> numericText({
-    String message = 'Use numbers only.',
+    String? message,
   }) {
     return pattern(
       RegExp(r'^\d+$'),
-      message: message,
+      message: message ?? FormFlutterValidationMessages.current.numericText,
     );
   }
 
   static FormFlutterValidator<String> sameAsField(
     String otherFieldName, {
-    String message = 'This value does not match.',
+    String? message,
   }) {
     return (value, values) {
       final otherValue = values.asMap()[otherFieldName]?.toString() ?? '';
-      return value == otherValue ? null : message;
+      return value == otherValue
+          ? null
+          : (message ?? FormFlutterValidationMessages.current.sameAsField);
     };
   }
 
   static FormFlutterValidator<T> requiredValue<T>({
-    String message = 'This field is required.',
+    String? message,
   }) {
     return (value, _) {
+      final resolvedMessage =
+          message ?? FormFlutterValidationMessages.current.requiredText;
       if (value == null) {
-        return message;
+        return resolvedMessage;
       }
       if (value is String && value.trim().isEmpty) {
-        return message;
+        return resolvedMessage;
       }
       if (value is Iterable && value.isEmpty) {
-        return message;
+        return resolvedMessage;
       }
       return null;
     };
   }
 
   static FormFlutterValidator<double?> requiredNumber({
-    String message = 'Enter a number.',
+    String? message,
   }) {
-    return (value, _) => value == null ? message : null;
+    return (value, _) => value == null
+        ? (message ?? FormFlutterValidationMessages.current.requiredNumber)
+        : null;
   }
 
   static FormFlutterValidator<double?> minNumber(
@@ -183,21 +235,27 @@ abstract final class FormFlutterValidators {
   }
 
   static FormFlutterValidator<T?> requiredSelection<T>({
-    String message = 'Make a selection.',
+    String? message,
   }) {
-    return (value, _) => value == null ? message : null;
+    return (value, _) => value == null
+        ? (message ?? FormFlutterValidationMessages.current.requiredSelection)
+        : null;
   }
 
   static FormFlutterValidator<bool> mustBeTrue({
-    String message = 'This field must be accepted.',
+    String? message,
   }) {
-    return (value, _) => value ? null : message;
+    return (value, _) => value
+        ? null
+        : (message ?? FormFlutterValidationMessages.current.mustBeTrue);
   }
 
   static FormFlutterValidator<DateTime?> requiredDate({
-    String message = 'Select a date.',
+    String? message,
   }) {
-    return (value, _) => value == null ? message : null;
+    return (value, _) => value == null
+        ? (message ?? FormFlutterValidationMessages.current.requiredDate)
+        : null;
   }
 
   static FormFlutterValidator<DateTime?> minDate(
@@ -250,9 +308,11 @@ abstract final class FormFlutterValidators {
   }
 
   static FormFlutterValidator<TimeOfDay?> requiredTime({
-    String message = 'Select a time.',
+    String? message,
   }) {
-    return (value, _) => value == null ? message : null;
+    return (value, _) => value == null
+        ? (message ?? FormFlutterValidationMessages.current.requiredTime)
+        : null;
   }
 
   static FormFlutterValidator<List<T>> minItems<T>(
@@ -308,9 +368,11 @@ abstract final class FormFlutterValidators {
   }
 
   static FormFlutterValidator<FormFlutterFileValue?> requiredFile({
-    String message = 'Select a file.',
+    String? message,
   }) {
-    return (value, _) => value == null ? message : null;
+    return (value, _) => value == null
+        ? (message ?? FormFlutterValidationMessages.current.requiredFile)
+        : null;
   }
 
   static FormFlutterValidator<FormFlutterFileValue?> fileSize(
@@ -353,7 +415,7 @@ abstract final class FormFlutterValidators {
   }
 
   static FormFlutterValidator<FormFlutterFileValue?> imageOnly({
-    String message = 'Only image files are allowed.',
+    String? message,
   }) {
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
     return (value, _) {
@@ -364,7 +426,10 @@ abstract final class FormFlutterValidators {
       if (mimeType != null && mimeType.startsWith('image/')) {
         return null;
       }
-      return fileExtension(imageExtensions, message: message)(value, const FormFlutterValues({}));
+      return fileExtension(
+        imageExtensions,
+        message: message ?? FormFlutterValidationMessages.current.imageOnly,
+      )(value, const FormFlutterValues({}));
     };
   }
 
@@ -425,7 +490,7 @@ abstract final class FormFlutterValidators {
 
   static FormFlutterAsyncValidator<String> uniqueValue(
     Future<bool> Function(String value, FormFlutterValues values) isAvailable, {
-    String message = 'This value is already in use.',
+    String? message,
     Duration? debounce,
   }) {
     return (value, values) async {
@@ -437,30 +502,32 @@ abstract final class FormFlutterValidators {
         await Future<void>.delayed(debounce);
       }
       final available = await isAvailable(trimmed, values);
-      return available ? null : message;
+      return available
+          ? null
+          : (message ?? FormFlutterValidationMessages.current.uniqueValue);
     };
   }
 
   static FormFlutterAsyncValidator<String> uniqueUsername(
     Future<bool> Function(String username, FormFlutterValues values) isAvailable, {
-    String message = 'This username is already taken.',
+    String? message,
     Duration? debounce,
   }) {
     return uniqueValue(
       isAvailable,
-      message: message,
+      message: message ?? FormFlutterValidationMessages.current.uniqueUsername,
       debounce: debounce,
     );
   }
 
   static FormFlutterAsyncValidator<String> uniqueEmail(
     Future<bool> Function(String email, FormFlutterValues values) isAvailable, {
-    String message = 'This email is already registered.',
+    String? message,
     Duration? debounce,
   }) {
     return uniqueValue(
       isAvailable,
-      message: message,
+      message: message ?? FormFlutterValidationMessages.current.uniqueEmail,
       debounce: debounce,
     );
   }

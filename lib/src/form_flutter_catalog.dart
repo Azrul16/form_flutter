@@ -2,6 +2,7 @@ import 'form_flutter_controller.dart';
 import 'form_flutter_field.dart';
 import 'form_flutter_validators.dart';
 
+/// High-level kinds used by presets and the field factory.
 enum FormFlutterFieldKind {
   text,
   email,
@@ -27,6 +28,7 @@ enum FormFlutterFieldKind {
   signature,
 }
 
+/// Categories used to group preset fields by domain or workflow.
 enum FormFlutterFieldCategory {
   personal,
   contact,
@@ -48,6 +50,7 @@ enum FormFlutterFieldCategory {
   advanced,
 }
 
+/// Metadata describing a field that can be built from the preset catalog.
 class FormFlutterFieldPreset {
   const FormFlutterFieldPreset({
     required this.key,
@@ -70,6 +73,7 @@ class FormFlutterFieldPreset {
   final List<String> validationNotes;
 }
 
+/// Shared option collections for common real-world form choices.
 abstract final class FormFlutterOptionSets {
   static const gender = [
     FormFlutterOption(value: 'male', label: 'Male'),
@@ -218,6 +222,7 @@ abstract final class FormFlutterOptionSets {
   ];
 }
 
+/// Built-in field preset collections grouped by common form domains.
 abstract final class FormFlutterCatalog {
   static const List<FormFlutterFieldPreset> personalInformation = [
     FormFlutterFieldPreset(
@@ -619,6 +624,7 @@ abstract final class FormFlutterCatalog {
   }
 }
 
+/// Higher-level validator presets built from the core validator helpers.
 abstract final class FormFlutterPresetValidators {
   static FormFlutterValidator<String> emailAddress() {
     return FormFlutterValidators.combine([

@@ -54,6 +54,91 @@ class ExampleHomePage extends StatefulWidget {
 class _ExampleHomePageState extends State<ExampleHomePage> {
   Map<String, Object?>? _savedSnapshot;
 
+  late final FormFlutterSchema _schema = FormFlutterSchema(
+    initialValues: const {
+      'schemaPhoneCountry': 'US',
+      'experience': 4.0,
+      'newsletter': true,
+      'timezone': 'utc_minus_5',
+    },
+    sections: [
+      FormFlutterSchemaSection(
+        title: 'Account basics',
+        description:
+            'Generated from presets with local screen-specific overrides.',
+        fields: [
+          FormFlutterSchemaField.fromPreset(
+            FormFlutterCatalog.accountFields.firstWhere(
+              (preset) => preset.key == 'username',
+            ),
+            label: 'Public username',
+            helperText: 'Visible to your team in shared workspaces.',
+            hintText: '@ada',
+            initialValue: 'ada_team',
+            decorationOverride: const InputDecoration(
+              prefixIcon: Icon(Icons.alternate_email),
+            ),
+            textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          FormFlutterSchemaField.fromPreset(
+            FormFlutterCatalog.contactInformation.firstWhere(
+              (preset) => preset.key == 'phone',
+            ),
+            name: 'supportPhone',
+            label: 'Support phone',
+            countryFieldName: 'schemaPhoneCountry',
+            allowedCountryCodes: const ['US', 'CA'],
+            showCountryFlagInSelector: false,
+            nationalNumberHintText: '5551234567',
+            helperText: 'Used only for customer-facing contact points.',
+          ),
+        ],
+      ),
+      const FormFlutterSchemaSection(
+        title: 'Preferences',
+        description:
+            'Mixed generated fields without any custom field factories.',
+        fields: [
+          FormFlutterSchemaField(
+            name: 'experience',
+            kind: FormFlutterFieldKind.slider,
+            label: 'Experience',
+            helperText: 'How experienced is this owner with production forms?',
+            sliderMin: 1,
+            sliderMax: 10,
+            sliderDivisions: 9,
+            sliderUnitLabel: 'years',
+          ),
+          FormFlutterSchemaField(
+            name: 'timezone',
+            kind: FormFlutterFieldKind.dropdown,
+            label: 'Primary timezone',
+            options: [
+              FormFlutterOption(value: 'utc_minus_5', label: 'UTC-5'),
+              FormFlutterOption(value: 'utc_plus_0', label: 'UTC+0'),
+              FormFlutterOption(value: 'utc_plus_6', label: 'UTC+6'),
+            ],
+            isRequired: true,
+            helperText:
+                'Useful for routing notifications and support coverage.',
+          ),
+          FormFlutterSchemaField(
+            name: 'newsletter',
+            kind: FormFlutterFieldKind.switchField,
+            label: 'Receive release updates',
+            helperText:
+                'See how boolean fields can also be generated from schema.',
+          ),
+        ],
+      ),
+    ],
+  );
+
+  late final FormFlutterController _schemaController =
+      FormFlutterFieldFactory.buildControllerFromSchema(_schema);
+  late final List<FormFlutterSection> _schemaSections =
+      FormFlutterFieldFactory.buildSectionsFromSchema(_schema);
+
   final FormFlutterController _controller = FormFlutterController(
     initialValues: const {
       'fullName': '',
@@ -264,7 +349,9 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
       _savedSnapshot = _controller.toJson();
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Serialized form state saved from controller.')),
+      const SnackBar(
+        content: Text('Serialized form state saved from controller.'),
+      ),
     );
   }
 
@@ -279,7 +366,9 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
 
     _controller.fromJson(savedSnapshot);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Controller restored from serialized state.')),
+      const SnackBar(
+        content: Text('Controller restored from serialized state.'),
+      ),
     );
   }
 
@@ -290,8 +379,18 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
     );
   }
 
+  void _resetSchemaForm() {
+    _schemaController.reset();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Schema-generated form reset to initial values.'),
+      ),
+    );
+  }
+
   @override
   void dispose() {
+    _schemaController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -322,104 +421,202 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           final compact = constraints.maxWidth < 820;
-                          final form = _ExampleCard(
-                            child: DynamicFormFlutter(
-                              controller: _controller,
-                              fields: _fields,
-                              submitLabel: 'Submit example form',
-                              header: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Styled example',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall
-                                        ?.copyWith(fontWeight: FontWeight.w800),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'This sample uses decoration overrides, option colors, icons, a country-aware phone field, a custom chip builder, and controller serialization helpers.',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          color: const Color(0xFF475467),
+                          final formCards = <Widget>[
+                            _ExampleCard(
+                              child: DynamicFormFlutter(
+                                controller: _controller,
+                                fields: _fields,
+                                submitLabel: 'Submit example form',
+                                header: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Styled example',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'This sample uses decoration overrides, option colors, icons, a country-aware phone field, a custom chip builder, and controller serialization helpers.',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: const Color(0xFF475467),
+                                          ),
+                                    ),
+                                    const SizedBox(height: 18),
+                                    Wrap(
+                                      spacing: 12,
+                                      runSpacing: 12,
+                                      children: [
+                                        FilledButton.icon(
+                                          onPressed: _exportSnapshot,
+                                          icon: const Icon(
+                                            Icons.upload_file_outlined,
+                                          ),
+                                          label: const Text('Export JSON'),
                                         ),
-                                  ),
-                                  const SizedBox(height: 18),
-                                  Wrap(
-                                    spacing: 12,
-                                    runSpacing: 12,
-                                    children: [
-                                      FilledButton.icon(
-                                        onPressed: _exportSnapshot,
-                                        icon: const Icon(Icons.upload_file_outlined),
-                                        label: const Text('Export JSON'),
+                                        OutlinedButton.icon(
+                                          onPressed: _importSnapshot,
+                                          icon: const Icon(
+                                            Icons.download_outlined,
+                                          ),
+                                          label: const Text('Import JSON'),
+                                        ),
+                                        TextButton.icon(
+                                          onPressed: _resetForm,
+                                          icon: const Icon(
+                                            Icons.restart_alt_outlined,
+                                          ),
+                                          label: const Text('Reset'),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 24),
+                                    _ExampleGrid(
+                                      children: [
+                                        _ExampleFieldCard(
+                                          child: _fields[0].buildField(
+                                            _controller,
+                                          ),
+                                        ),
+                                        _ExampleFieldCard(
+                                          child: _fields[1].buildField(
+                                            _controller,
+                                          ),
+                                        ),
+                                        _ExampleFieldCard(
+                                          child: _fields[2].buildField(
+                                            _controller,
+                                          ),
+                                        ),
+                                        _ExampleFieldCard(
+                                          child: _fields[3].buildField(
+                                            _controller,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 14),
+                                    _ExampleFieldCard(
+                                      child: _fields[4].buildField(_controller),
+                                    ),
+                                    const SizedBox(height: 14),
+                                    _ExampleFieldCard(
+                                      child: _fields[5].buildField(_controller),
+                                    ),
+                                    const SizedBox(height: 14),
+                                    _ExampleGrid(
+                                      children: [
+                                        _ExampleFieldCard(
+                                          child: _fields[6].buildField(
+                                            _controller,
+                                          ),
+                                        ),
+                                        _ExampleFieldCard(
+                                          child: _fields[7].buildField(
+                                            _controller,
+                                          ),
+                                        ),
+                                        _ExampleFieldCard(
+                                          child: _fields[8].buildField(
+                                            _controller,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 24),
+                                  ],
+                                ),
+                                onSubmit: (values) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Submitted: ${values.asMap()}',
                                       ),
-                                      OutlinedButton.icon(
-                                        onPressed: _importSnapshot,
-                                        icon: const Icon(Icons.download_outlined),
-                                        label: const Text('Import JSON'),
-                                      ),
-                                      TextButton.icon(
-                                        onPressed: _resetForm,
-                                        icon: const Icon(Icons.restart_alt_outlined),
-                                        label: const Text('Reset'),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 24),
-                                  _ExampleGrid(
-                                    children: [
-                                      _ExampleFieldCard(
-                                        child: _fields[0].buildField(_controller),
-                                      ),
-                                      _ExampleFieldCard(
-                                        child: _fields[1].buildField(_controller),
-                                      ),
-                                      _ExampleFieldCard(
-                                        child: _fields[2].buildField(_controller),
-                                      ),
-                                      _ExampleFieldCard(
-                                        child: _fields[3].buildField(_controller),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 14),
-                                  _ExampleFieldCard(
-                                    child: _fields[4].buildField(_controller),
-                                  ),
-                                  const SizedBox(height: 14),
-                                  _ExampleFieldCard(
-                                    child: _fields[5].buildField(_controller),
-                                  ),
-                                  const SizedBox(height: 14),
-                                  _ExampleGrid(
-                                    children: [
-                                      _ExampleFieldCard(
-                                        child: _fields[6].buildField(_controller),
-                                      ),
-                                      _ExampleFieldCard(
-                                        child: _fields[7].buildField(_controller),
-                                      ),
-                                      _ExampleFieldCard(
-                                        child: _fields[8].buildField(_controller),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 24),
-                                ],
+                                    ),
+                                  );
+                                },
                               ),
-                              onSubmit: (values) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Submitted: ${values.asMap()}'),
-                                  ),
-                                );
-                              },
                             ),
-                          );
+                            const SizedBox(height: 20),
+                            _ExampleCard(
+                              child: DynamicFormFlutter(
+                                controller: _schemaController,
+                                fields: const [],
+                                sections: _schemaSections,
+                                useStepper: true,
+                                disableSubmitUntilDirty: true,
+                                showValidationSummary: true,
+                                submitLabel: 'Submit schema form',
+                                header: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Schema-generated example',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'This sample uses FormFlutterSchema plus preset overrides to build a stepper form without writing custom field factories.',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: const Color(0xFF475467),
+                                          ),
+                                    ),
+                                    const SizedBox(height: 18),
+                                    Wrap(
+                                      spacing: 12,
+                                      runSpacing: 12,
+                                      children: [
+                                        FilledButton.tonalIcon(
+                                          onPressed: _resetSchemaForm,
+                                          icon: const Icon(
+                                            Icons.schema_outlined,
+                                          ),
+                                          label: const Text(
+                                            'Reset schema form',
+                                          ),
+                                        ),
+                                        _InlineInfoChip(
+                                          label:
+                                              '${_schemaSections.length} sections',
+                                        ),
+                                        const _InlineInfoChip(
+                                          label: 'Preset overrides',
+                                        ),
+                                        const _InlineInfoChip(
+                                          label: 'Generated fields',
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                ),
+                                onSubmit: (values) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Schema submit: ${values.asMap()}',
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ];
 
                           final preview = _ExampleCard(
                             dark: true,
@@ -432,7 +629,7 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
                           if (compact) {
                             return ListView(
                               children: [
-                                form,
+                                ...formCards,
                                 const SizedBox(height: 20),
                                 preview,
                               ],
@@ -442,7 +639,10 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
                           return Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(flex: 7, child: form),
+                              Expanded(
+                                flex: 7,
+                                child: ListView(children: formCards),
+                              ),
                               const SizedBox(width: 20),
                               Expanded(flex: 4, child: preview),
                             ],
@@ -482,12 +682,15 @@ class _ExampleStatePreview extends StatelessWidget {
             return ValueListenableBuilder<Map<String, bool>>(
               valueListenable: controller.dirtyFieldsListenable,
               builder: (context, dirtyFields, _) {
-                final touchedCount =
-                    touchedFields.values.where((value) => value).length;
-                final dirtyCount =
-                    dirtyFields.values.where((value) => value).length;
-                final currentJson = const JsonEncoder.withIndent('  ')
-                    .convert(controller.toJson());
+                final touchedCount = touchedFields.values
+                    .where((value) => value)
+                    .length;
+                final dirtyCount = dirtyFields.values
+                    .where((value) => value)
+                    .length;
+                final currentJson = const JsonEncoder.withIndent(
+                  '  ',
+                ).convert(controller.toJson());
                 final savedJson = savedSnapshot == null
                     ? 'No exported snapshot yet.'
                     : const JsonEncoder.withIndent('  ').convert(savedSnapshot);
@@ -524,7 +727,9 @@ class _ExampleStatePreview extends StatelessWidget {
                           tone: const Color(0xFFF97316),
                         ),
                         _PreviewChip(
-                          label: controller.hasDirtyFields ? 'Unsaved' : 'Clean',
+                          label: controller.hasDirtyFields
+                              ? 'Unsaved'
+                              : 'Clean',
                           tone: controller.hasDirtyFields
                               ? const Color(0xFFEF4444)
                               : const Color(0xFF22C55E),
@@ -532,15 +737,9 @@ class _ExampleStatePreview extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    _PreviewBlock(
-                      title: 'Values',
-                      content: values.toString(),
-                    ),
+                    _PreviewBlock(title: 'Values', content: values.toString()),
                     const SizedBox(height: 14),
-                    _PreviewBlock(
-                      title: 'Current JSON',
-                      content: currentJson,
-                    ),
+                    _PreviewBlock(title: 'Current JSON', content: currentJson),
                     const SizedBox(height: 14),
                     _PreviewBlock(
                       title: 'Last Exported JSON',
@@ -585,10 +784,18 @@ class _ExampleHeader extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Detailed Styling Example',
+            'Detailed Styling and Schema Example',
             style: theme.textTheme.headlineMedium?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Explore direct field definitions, controller helpers, and schema-generated forms in one example app.',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: const Color(0xFFE0EAFF),
+              height: 1.5,
             ),
           ),
         ],
@@ -608,7 +815,9 @@ class _ExampleCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: dark ? const Color(0xFF0F172A) : Colors.white.withValues(alpha: 0.94),
+        color: dark
+            ? const Color(0xFF0F172A)
+            : Colors.white.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: dark ? const Color(0xFF1F2937) : const Color(0xFFD7E2F2),
@@ -659,11 +868,33 @@ class _ExampleGrid extends StatelessWidget {
   }
 }
 
+class _InlineInfoChip extends StatelessWidget {
+  const _InlineInfoChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF4FF),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFFD0DDFB)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: const Color(0xFF155EEF),
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
 class _PreviewBlock extends StatelessWidget {
-  const _PreviewBlock({
-    required this.title,
-    required this.content,
-  });
+  const _PreviewBlock({required this.title, required this.content});
 
   final String title;
   final String content;
@@ -676,9 +907,9 @@ class _PreviewBlock extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(height: 8),
         Container(
@@ -720,10 +951,7 @@ class _PreviewChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: tone,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(color: tone, fontWeight: FontWeight.w600),
       ),
     );
   }

@@ -8,8 +8,9 @@ A Flutter package for building reusable, schema-friendly forms with shared valid
 - Common field widgets for text, password, multiline, number, phone, country, dropdown, radio, checkbox, switch, date, time, date-time, slider, and multi-select
 - Sync and async validators for text, numbers, dates, files, conditional rules, and uniqueness checks
 - Preset field catalog for personal, contact, address, account, academic, professional, survey, commerce, appointment, and consent flows
+- Schema builder helpers for turning presets and schema definitions into full sections, controllers, and generated fields with per-field overrides
 - Common option sets for fields like gender, marital status, degree, employment type, payment method, and more
-- Dedicated example app and local playground demonstrating controller export, import, reset, and live state previews
+- Dedicated example app and local playground demonstrating controller export, import, reset, live state previews, and schema-generated forms
 
 ## Getting started
 
@@ -17,7 +18,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  form_flutter: ^0.1.0
+  form_flutter: ^1.0.0
 ```
 
 Then run:
@@ -184,6 +185,80 @@ class _RegistrationFormState extends State<RegistrationForm> {
 
 For complete runnable samples, see [`example/lib/main.dart`](example/lib/main.dart) and [`lib/main.dart`](lib/main.dart).
 
+## Schema builder
+
+You can also generate a full form from schema definitions and preset metadata.
+
+```dart
+final schema = FormFlutterSchema(
+  initialValues: const {
+    'phoneCountry': 'US',
+    'newsletter': true,
+  },
+  sections: [
+    FormFlutterSchemaSection(
+      title: 'Account',
+      description: 'Create the basics once and override only what this screen needs.',
+      fields: [
+        FormFlutterSchemaField.fromPreset(
+          FormFlutterCatalog.accountFields.firstWhere(
+            (preset) => preset.key == 'username',
+          ),
+          label: 'Public username',
+          helperText: 'Shown on your profile.',
+          hintText: '@ada',
+          initialValue: 'ada',
+          decorationOverride: const InputDecoration(prefixIcon: Icon(Icons.alternate_email)),
+        ),
+        FormFlutterSchemaField.fromPreset(
+          FormFlutterCatalog.contactInformation.firstWhere(
+            (preset) => preset.key == 'phone',
+          ),
+          countryFieldName: 'phoneCountry',
+          allowedCountryCodes: const ['US', 'CA'],
+          nationalNumberHintText: '5551234567',
+        ),
+      ],
+    ),
+    const FormFlutterSchemaSection(
+      title: 'Preferences',
+      fields: [
+        FormFlutterSchemaField(
+          name: 'experience',
+          kind: FormFlutterFieldKind.slider,
+          label: 'Experience',
+          sliderMin: 1,
+          sliderMax: 10,
+          sliderDivisions: 9,
+          sliderUnitLabel: 'years',
+        ),
+      ],
+    ),
+  ],
+);
+
+final controller = FormFlutterFieldFactory.buildControllerFromSchema(schema);
+final sections = FormFlutterFieldFactory.buildSectionsFromSchema(schema);
+
+DynamicFormFlutter(
+  controller: controller,
+  fields: const [],
+  sections: sections,
+  onSubmit: (values) {
+    debugPrint('Schema submit: ${values.asMap()}');
+  },
+)
+```
+
+Schema helpers include:
+
+- `FormFlutterSchema`, `FormFlutterSchemaSection`, and `FormFlutterSchemaField`
+- `FormFlutterSchemaField.fromPreset(...)` for merging preset defaults with screen-specific overrides
+- `FormFlutterFieldFactory.buildFieldsFromSchema(...)` for flat forms
+- `FormFlutterFieldFactory.buildSectionsFromSchema(...)` for sectioned or stepper forms
+- `FormFlutterFieldFactory.buildInitialValuesFromSchema(...)` and `buildControllerFromSchema(...)` for form state setup
+- typed overrides like `label`, `helperText`, `hintText`, `options`, `validator`, `asyncValidator`, phone-country config, slider ranges, `decorationOverride`, and `textStyle`
+
 ## Controller helpers
 
 `FormFlutterController` now includes state and serialization helpers for real-world form flows.
@@ -210,7 +285,7 @@ Available controller helpers include:
 
 Serialization notes:
 
-- `DateTime` values are exported as ISO-8601 strings
+- `DateTime` values are exported with a tagged JSON object and restored automatically
 - `TimeOfDay` values are exported with a tagged JSON object and restored automatically
 - `FormFlutterFileValue` values are exported with name, size, extension, and MIME metadata
 
@@ -227,6 +302,7 @@ Serialization notes:
 | Range fields | `FormFlutterSliderField` |
 | Validators | `FormFlutterValidators`, `FormFlutterPresetValidators` |
 | Catalog and presets | `FormFlutterCatalog`, `FormFlutterOptionSets`, `FormFlutterFieldPreset` |
+| Schema builder | `FormFlutterSchema`, `FormFlutterSchemaSection`, `FormFlutterSchemaField`, `FormFlutterFieldFactory` |
 | Supporting models | `FormFlutterOption`, `FormFlutterFileValue` |
 
 Typical flow:
@@ -385,7 +461,7 @@ This package includes:
 
 - a dedicated `example/` app for pub.dev example points
 - a root app in `lib/main.dart` that acts as a local full-form playground
-- live examples of controller export, import, reset, and touched or dirty state previews
+- live examples of controller export, import, reset, touched or dirty state previews, and schema-generated forms
 - controller tests covering serialization, reset behavior, and field-state tracking
 
 If you want to explore the most complete demos, start with [`example/lib/main.dart`](example/lib/main.dart) and [`lib/main.dart`](lib/main.dart).

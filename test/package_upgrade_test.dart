@@ -63,6 +63,100 @@ void main() {
     });
   });
 
+
+  group('FormFlutterSchema', () {
+    test('builds schema sections and initial values from preset overrides', () {
+      final schema = FormFlutterSchema(
+        initialValues: const {'role': 'member'},
+        sections: [
+          FormFlutterSchemaSection(
+            title: 'Account',
+            description: 'Account settings',
+            fields: [
+              FormFlutterSchemaField.fromPreset(
+                FormFlutterCatalog.accountFields.firstWhere(
+                  (preset) => preset.key == 'username',
+                ),
+                label: 'Public handle',
+                helperText: 'Visible to other members.',
+                hintText: '@ada',
+                initialValue: 'ada',
+                decorationOverride: const InputDecoration(prefixText: '@'),
+                textStyle: const TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final sections = FormFlutterFieldFactory.buildSectionsFromSchema(schema);
+      final initialValues = FormFlutterFieldFactory.buildInitialValuesFromSchema(schema);
+      final controller = FormFlutterFieldFactory.buildControllerFromSchema(schema);
+      addTearDown(controller.dispose);
+
+      expect(sections, hasLength(1));
+      expect(sections.first.title, 'Account');
+      expect(sections.first.description, 'Account settings');
+
+      final field = sections.first.fields.single as FormFlutterTextField;
+      expect(field.label, 'Public handle');
+      expect(field.helperText, 'Visible to other members.');
+      expect(field.hintText, '@ada');
+      expect(field.decorationOverride?.prefixText, '@');
+      expect(field.textStyle?.fontSize, 18);
+
+      expect(initialValues['role'], 'member');
+      expect(initialValues['username'], 'ada');
+      expect(controller.value<String>('username'), 'ada');
+    });
+
+    test('applies typed schema overrides without requiring custom builders', () {
+      final schema = FormFlutterSchema(
+        sections: [
+          FormFlutterSchemaSection(
+            title: 'Contact',
+            fields: [
+              const FormFlutterSchemaField(
+                name: 'phone',
+                kind: FormFlutterFieldKind.phone,
+                label: 'Phone',
+                countryFieldName: 'contactCountry',
+                initialCountryCode: 'BD',
+                allowedCountryCodes: ['BD', 'US'],
+                showCountryName: true,
+                nationalNumberHintText: '1XXXXXXXXX',
+              ),
+              const FormFlutterSchemaField(
+                name: 'experience',
+                kind: FormFlutterFieldKind.slider,
+                label: 'Experience',
+                sliderMin: 1,
+                sliderMax: 5,
+                sliderDivisions: 4,
+                sliderUnitLabel: 'years',
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final fields = FormFlutterFieldFactory.buildFieldsFromSchema(schema);
+
+      final phoneField = fields[0] as FormFlutterPhoneField;
+      expect(phoneField.resolvedCountryFieldName, 'contactCountry');
+      expect(phoneField.initialCountryCode, 'BD');
+      expect(phoneField.allowedCountryCodes, ['BD', 'US']);
+      expect(phoneField.showCountryName, isTrue);
+      expect(phoneField.nationalNumberHintText, '1XXXXXXXXX');
+
+      final sliderField = fields[1] as FormFlutterSliderField;
+      expect(sliderField.min, 1);
+      expect(sliderField.max, 5);
+      expect(sliderField.divisions, 4);
+      expect(sliderField.unitLabel, 'years');
+    });
+  });
+
   group('Validation messages', () {
     test('supports localized validation defaults', () {
       final previous = FormFlutterValidationMessages.current;

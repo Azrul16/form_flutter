@@ -441,7 +441,7 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'This sample uses decoration overrides, option colors, icons, a country-aware phone field, a custom chip builder, and controller serialization helpers.',
+                                      'This v1.0.1 sample uses decoration overrides, option colors, icons, a country-aware phone field, explicit picker UX, and controller serialization helpers.',
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
@@ -568,7 +568,7 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'This sample uses FormFlutterSchema plus preset overrides to build a stepper form without writing custom field factories.',
+                                      'This v1.0.1 sample uses FormFlutterSchema plus preset overrides to build a stepper form with stronger generated validation and without custom field factories.',
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
@@ -792,7 +792,7 @@ class _ExampleHeader extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Explore direct field definitions, controller helpers, and schema-generated forms in one example app.',
+            'v1.0.1 explores direct field definitions, controller helpers, explicit picker UX, and schema-generated forms in one example app.',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: const Color(0xFFE0EAFF),
               height: 1.5,

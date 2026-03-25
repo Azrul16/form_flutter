@@ -217,6 +217,7 @@ abstract final class FormFlutterOptionSets {
   static const meetingModes = [
     FormFlutterOption(value: 'in_person', label: 'In person'),
     FormFlutterOption(value: 'online', label: 'Online'),
+    FormFlutterOption(value: 'offline', label: 'Offline'),
     FormFlutterOption(value: 'phone_call', label: 'Phone call'),
     FormFlutterOption(value: 'video_call', label: 'Video call'),
   ];
@@ -640,18 +641,14 @@ abstract final class FormFlutterPresetValidators {
     ]);
   }
 
-  static FormFlutterValidator<String> password({
-    int minLength = 8,
-  }) {
+  static FormFlutterValidator<String> password({int minLength = 8}) {
     return FormFlutterValidators.combine([
       FormFlutterValidators.requiredText(),
       FormFlutterValidators.mediumPassword(minLength: minLength),
     ]);
   }
 
-  static FormFlutterValidator<String> strongPassword({
-    int minLength = 10,
-  }) {
+  static FormFlutterValidator<String> strongPassword({int minLength = 10}) {
     return FormFlutterValidators.combine([
       FormFlutterValidators.requiredText(),
       FormFlutterValidators.strongPassword(minLength: minLength),
@@ -667,7 +664,9 @@ abstract final class FormFlutterPresetValidators {
     ]);
   }
 
-  static FormFlutterValidator<String> confirmPassword(String passwordFieldName) {
+  static FormFlutterValidator<String> confirmPassword(
+    String passwordFieldName,
+  ) {
     return FormFlutterValidators.combine([
       FormFlutterValidators.requiredText(),
       FormFlutterValidators.sameAsField(
@@ -677,9 +676,7 @@ abstract final class FormFlutterPresetValidators {
     ]);
   }
 
-  static FormFlutterValidator<String> otp({
-    int length = 6,
-  }) {
+  static FormFlutterValidator<String> otp({int length = 6}) {
     return FormFlutterValidators.combine([
       FormFlutterValidators.requiredText(),
       FormFlutterValidators.numericText(),
@@ -688,7 +685,8 @@ abstract final class FormFlutterPresetValidators {
   }
 
   static FormFlutterAsyncValidator<String> uniqueUsername(
-    Future<bool> Function(String username, FormFlutterValues values) isAvailable,
+    Future<bool> Function(String username, FormFlutterValues values)
+    isAvailable,
   ) {
     return FormFlutterValidators.uniqueUsername(
       isAvailable,

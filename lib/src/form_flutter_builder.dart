@@ -660,10 +660,7 @@ class FormFlutterFieldFactory {
           enableObscureTextToggle: true,
           validator:
               _castValidator<String>(config.validator) ??
-              _buildStringValidator(
-                config,
-                fallback: FormFlutterPresetValidators.password(),
-              ),
+              _buildPasswordValidator(config),
           asyncValidator: _castAsyncValidator<String>(config.asyncValidator),
         );
       case FormFlutterFieldKind.phone:
@@ -733,9 +730,7 @@ class FormFlutterFieldFactory {
           textStyle: config.textStyle,
           validator:
               _castValidator<double?>(config.validator) ??
-              (config.isRequired
-                  ? FormFlutterValidators.requiredNumber()
-                  : null),
+              _buildNumberValidator(config),
           asyncValidator: _castAsyncValidator<double?>(config.asyncValidator),
         );
       case FormFlutterFieldKind.dropdown:
@@ -799,7 +794,7 @@ class FormFlutterFieldFactory {
           textStyle: config.textStyle,
           validator:
               _castValidator<DateTime?>(config.validator) ??
-              (config.isRequired ? FormFlutterValidators.requiredDate() : null),
+              _buildDateValidator(config),
           asyncValidator: _castAsyncValidator<DateTime?>(config.asyncValidator),
         );
       case FormFlutterFieldKind.time:
@@ -865,6 +860,7 @@ class FormFlutterFieldFactory {
           name: config.name,
           label: config.label,
           helperText: config.helperText,
+          hintText: config.hintText,
           decorationOverride: config.decorationOverride,
           textStyle: config.textStyle,
           validator:
@@ -900,6 +896,7 @@ class FormFlutterFieldFactory {
           hintText: config.hintText,
           options: config.options.map((option) => option.value).toList(),
           decoration: config.decorationOverride,
+          textStyle: config.textStyle,
           displayStringForOption: (option) {
             for (final item in config.options) {
               if (item.value == option) {
@@ -922,9 +919,10 @@ class FormFlutterFieldFactory {
           helperText: config.helperText,
           decoration: config.decorationOverride,
           onPick: filePicker ?? _noopPicker,
+          pickerConfigured: filePicker != null,
           validator:
               _castValidator<FormFlutterFileValue?>(config.validator) ??
-              (config.isRequired ? FormFlutterValidators.requiredFile() : null),
+              _buildFileValidator(config),
           asyncValidator: _castAsyncValidator<FormFlutterFileValue?>(
             config.asyncValidator,
           ),
@@ -936,14 +934,10 @@ class FormFlutterFieldFactory {
           helperText: config.helperText,
           decoration: config.decorationOverride,
           onPick: imagePicker ?? filePicker ?? _noopPicker,
+          pickerConfigured: imagePicker != null || filePicker != null,
           validator:
               _castValidator<FormFlutterFileValue?>(config.validator) ??
-              (config.isRequired
-                  ? FormFlutterValidators.combine<FormFlutterFileValue?>([
-                      FormFlutterValidators.requiredFile(),
-                      FormFlutterValidators.imageOnly(),
-                    ])
-                  : FormFlutterValidators.imageOnly()),
+              _buildFileValidator(config, imageOnlyByKind: true),
           asyncValidator: _castAsyncValidator<FormFlutterFileValue?>(
             config.asyncValidator,
           ),
@@ -979,6 +973,115 @@ class FormFlutterFieldFactory {
     }
   }
 
+  static bool _hasValidationNote(_ResolvedFieldConfig config, String fragment) {
+    final needle = fragment.toLowerCase();
+    return config.validationNotes.any(
+      (note) => note.toLowerCase().contains(needle),
+    );
+  }
+
+  static bool _isRequired(_ResolvedFieldConfig config) {
+    return config.isRequired || _hasValidationNote(config, 'required');
+  }
+
+  static FormFlutterValidator<String>? _buildPasswordValidator(
+    _ResolvedFieldConfig config,
+  ) {
+    if (_hasValidationNote(config, 'match another field')) {
+      final validators = <FormFlutterValidator<String>>[];
+      if (_isRequired(config)) {
+        validators.add(FormFlutterValidators.requiredText());
+      }
+      validators.add(
+        FormFlutterValidators.sameAsField(
+          _inferMatchingFieldName(config.name),
+          message: 'Passwords do not match.',
+        ),
+      );
+      return FormFlutterValidators.combine(validators);
+    }
+
+    if (_hasValidationNote(config, 'password strength')) {
+      return FormFlutterPresetValidators.password();
+    }
+
+    return _buildStringValidator(config);
+  }
+
+  static FormFlutterValidator<double?>? _buildNumberValidator(
+    _ResolvedFieldConfig config,
+  ) {
+    final validators = <FormFlutterValidator<double?>>[];
+    if (_isRequired(config)) {
+      validators.add(FormFlutterValidators.requiredNumber());
+    }
+    if (_hasValidationNote(config, 'min value')) {
+      validators.add(FormFlutterValidators.minNumber(0));
+    }
+    if (_hasValidationNote(config, 'max value')) {
+      validators.add(FormFlutterValidators.maxNumber(100));
+    }
+    if (validators.isEmpty) {
+      return null;
+    }
+    return FormFlutterValidators.combine(validators);
+  }
+
+  static FormFlutterValidator<DateTime?>? _buildDateValidator(
+    _ResolvedFieldConfig config,
+  ) {
+    final validators = <FormFlutterValidator<DateTime?>>[];
+    if (_isRequired(config)) {
+      validators.add(FormFlutterValidators.requiredDate());
+    }
+    if (_hasValidationNote(config, 'minimum age')) {
+      validators.add(FormFlutterValidators.minimumAge(18));
+    }
+    if (validators.isEmpty) {
+      return null;
+    }
+    return FormFlutterValidators.combine(validators);
+  }
+
+  static FormFlutterValidator<FormFlutterFileValue?>? _buildFileValidator(
+    _ResolvedFieldConfig config, {
+    bool imageOnlyByKind = false,
+  }) {
+    final validators = <FormFlutterValidator<FormFlutterFileValue?>>[];
+    if (_isRequired(config)) {
+      validators.add(FormFlutterValidators.requiredFile());
+    }
+    if (_hasValidationNote(config, 'file size limit')) {
+      validators.add(FormFlutterValidators.fileSize(5 * 1024 * 1024));
+    }
+    if (imageOnlyByKind) {
+      validators.add(FormFlutterValidators.imageOnly());
+    } else if (_hasValidationNote(config, 'file type restriction')) {
+      validators.add(
+        FormFlutterValidators.fileExtension(['pdf', 'doc', 'docx']),
+      );
+    }
+    if (validators.isEmpty) {
+      return null;
+    }
+    return FormFlutterValidators.combine(validators);
+  }
+
+  static String _inferMatchingFieldName(String fieldName) {
+    if (fieldName.startsWith('confirm_')) {
+      return fieldName.substring('confirm_'.length);
+    }
+    if (fieldName.startsWith('confirm')) {
+      final suffix = fieldName.substring('confirm'.length);
+      if (suffix.isEmpty) {
+        return 'password';
+      }
+      final lowerFirst = suffix[0].toLowerCase() + suffix.substring(1);
+      return lowerFirst.startsWith('_') ? lowerFirst.substring(1) : lowerFirst;
+    }
+    return 'password';
+  }
+
   static FormFlutterValidator<T>? _castValidator<T>(
     FormFlutterValidator<dynamic>? validator,
   ) {
@@ -1002,18 +1105,41 @@ class FormFlutterFieldFactory {
     FormFlutterValidator<String>? fallback,
   }) {
     final validators = <FormFlutterValidator<String>>[];
-    if (config.isRequired) {
+    if (_isRequired(config)) {
       validators.add(FormFlutterValidators.requiredText());
     }
 
-    if (config.validationNotes.any((note) => note.contains('email'))) {
+    if (_hasValidationNote(config, 'email')) {
       validators.add(FormFlutterValidators.email());
     }
-    if (config.validationNotes.any((note) => note.contains('URL'))) {
+    if (_hasValidationNote(config, 'url')) {
       validators.add(FormFlutterValidators.url());
     }
-    if (config.validationNotes.any((note) => note.contains('minimum length'))) {
+    if (_hasValidationNote(config, 'minimum length')) {
       validators.add(FormFlutterValidators.minLength(3));
+    }
+    if (_hasValidationNote(config, 'exact length')) {
+      validators.add(FormFlutterValidators.exactLength(6));
+    }
+    if (_hasValidationNote(config, 'number only')) {
+      validators.add(FormFlutterValidators.numericText());
+    }
+    if (_hasValidationNote(config, 'regex pattern')) {
+      final postalLike =
+          config.name.contains('postal') || config.name.contains('zip');
+      if (postalLike) {
+        validators.add(
+          FormFlutterValidators.pattern(
+            RegExp(r'^[A-Za-z0-9 -]{3,12}$'),
+            message: 'Enter a valid postal code.',
+          ),
+        );
+      }
+    }
+    if (_hasValidationNote(config, 'match another field')) {
+      validators.add(
+        FormFlutterValidators.sameAsField(_inferMatchingFieldName(config.name)),
+      );
     }
     if (fallback != null) {
       validators.add(fallback);

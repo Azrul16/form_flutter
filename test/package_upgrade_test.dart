@@ -61,8 +61,59 @@ void main() {
       expect(fields[4], isA<FormFlutterImageField>());
       expect(fields[5], isA<FormFlutterSignatureField>());
     });
-  });
 
+    test('applies preset validation hints and honest picker defaults', () {
+      final confirmPreset = FormFlutterCatalog.accountFields.firstWhere(
+        (preset) => preset.key == 'confirm_password',
+      );
+      final confirmField =
+          FormFlutterFieldFactory.buildField(confirmPreset)
+              as FormFlutterTextField;
+
+      expect(
+        confirmField.validator?.call(
+          'different',
+          const FormFlutterValues({
+            'password': 'secret123',
+            'confirm_password': 'different',
+          }),
+        ),
+        'Passwords do not match.',
+      );
+
+      final dobPreset = FormFlutterCatalog.personalInformation.firstWhere(
+        (preset) => preset.key == 'date_of_birth',
+      );
+      final dobField =
+          FormFlutterFieldFactory.buildField(dobPreset) as FormFlutterDateField;
+      expect(
+        dobField.validator?.call(
+          DateTime.now().subtract(const Duration(days: 365 * 10)),
+          const FormFlutterValues({}),
+        ),
+        isNotNull,
+      );
+
+      final resumePreset = FormFlutterCatalog.professionalFields.firstWhere(
+        (preset) => preset.key == 'resume',
+      );
+      final resumeField =
+          FormFlutterFieldFactory.buildField(resumePreset)
+              as FormFlutterFileField;
+      expect(resumeField.pickerConfigured, isFalse);
+      expect(
+        resumeField.validator?.call(
+          const FormFlutterFileValue(
+            name: 'resume.txt',
+            sizeInBytes: 8 * 1024 * 1024,
+            extension: 'txt',
+          ),
+          const FormFlutterValues({}),
+        ),
+        isNotNull,
+      );
+    });
+  });
 
   group('FormFlutterSchema', () {
     test('builds schema sections and initial values from preset overrides', () {
@@ -90,8 +141,11 @@ void main() {
       );
 
       final sections = FormFlutterFieldFactory.buildSectionsFromSchema(schema);
-      final initialValues = FormFlutterFieldFactory.buildInitialValuesFromSchema(schema);
-      final controller = FormFlutterFieldFactory.buildControllerFromSchema(schema);
+      final initialValues =
+          FormFlutterFieldFactory.buildInitialValuesFromSchema(schema);
+      final controller = FormFlutterFieldFactory.buildControllerFromSchema(
+        schema,
+      );
       addTearDown(controller.dispose);
 
       expect(sections, hasLength(1));
@@ -110,59 +164,106 @@ void main() {
       expect(controller.value<String>('username'), 'ada');
     });
 
-    test('applies typed schema overrides without requiring custom builders', () {
-      final schema = FormFlutterSchema(
-        sections: [
-          FormFlutterSchemaSection(
-            title: 'Contact',
-            fields: [
-              const FormFlutterSchemaField(
-                name: 'phone',
-                kind: FormFlutterFieldKind.phone,
-                label: 'Phone',
-                countryFieldName: 'contactCountry',
-                initialCountryCode: 'BD',
-                allowedCountryCodes: ['BD', 'US'],
-                showCountryName: true,
-                nationalNumberHintText: '1XXXXXXXXX',
-              ),
-              const FormFlutterSchemaField(
-                name: 'experience',
-                kind: FormFlutterFieldKind.slider,
-                label: 'Experience',
-                sliderMin: 1,
-                sliderMax: 5,
-                sliderDivisions: 4,
-                sliderUnitLabel: 'years',
-              ),
-            ],
-          ),
-        ],
-      );
+    test(
+      'applies typed schema overrides without requiring custom builders',
+      () {
+        final schema = FormFlutterSchema(
+          sections: [
+            FormFlutterSchemaSection(
+              title: 'Contact',
+              fields: [
+                const FormFlutterSchemaField(
+                  name: 'phone',
+                  kind: FormFlutterFieldKind.phone,
+                  label: 'Phone',
+                  countryFieldName: 'contactCountry',
+                  initialCountryCode: 'BD',
+                  allowedCountryCodes: ['BD', 'US'],
+                  showCountryName: true,
+                  nationalNumberHintText: '1XXXXXXXXX',
+                ),
+                const FormFlutterSchemaField(
+                  name: 'experience',
+                  kind: FormFlutterFieldKind.slider,
+                  label: 'Experience',
+                  sliderMin: 1,
+                  sliderMax: 5,
+                  sliderDivisions: 4,
+                  sliderUnitLabel: 'years',
+                ),
+              ],
+            ),
+          ],
+        );
 
-      final fields = FormFlutterFieldFactory.buildFieldsFromSchema(schema);
+        final fields = FormFlutterFieldFactory.buildFieldsFromSchema(schema);
 
-      final phoneField = fields[0] as FormFlutterPhoneField;
-      expect(phoneField.resolvedCountryFieldName, 'contactCountry');
-      expect(phoneField.initialCountryCode, 'BD');
-      expect(phoneField.allowedCountryCodes, ['BD', 'US']);
-      expect(phoneField.showCountryName, isTrue);
-      expect(phoneField.nationalNumberHintText, '1XXXXXXXXX');
+        final phoneField = fields[0] as FormFlutterPhoneField;
+        expect(phoneField.resolvedCountryFieldName, 'contactCountry');
+        expect(phoneField.initialCountryCode, 'BD');
+        expect(phoneField.allowedCountryCodes, ['BD', 'US']);
+        expect(phoneField.showCountryName, isTrue);
+        expect(phoneField.nationalNumberHintText, '1XXXXXXXXX');
 
-      final sliderField = fields[1] as FormFlutterSliderField;
-      expect(sliderField.min, 1);
-      expect(sliderField.max, 5);
-      expect(sliderField.divisions, 4);
-      expect(sliderField.unitLabel, 'years');
-    });
+        final sliderField = fields[1] as FormFlutterSliderField;
+        expect(sliderField.min, 1);
+        expect(sliderField.max, 5);
+        expect(sliderField.divisions, 4);
+        expect(sliderField.unitLabel, 'years');
+      },
+    );
+
+    test(
+      'passes supported schema overrides through generated otp and autocomplete fields',
+      () {
+        final schema = FormFlutterSchema(
+          sections: [
+            FormFlutterSchemaSection(
+              title: 'Generated',
+              fields: [
+                const FormFlutterSchemaField(
+                  name: 'otp',
+                  kind: FormFlutterFieldKind.otp,
+                  label: 'Verification code',
+                  hintText: '123456',
+                  textStyle: TextStyle(fontSize: 20),
+                ),
+                const FormFlutterSchemaField(
+                  name: 'city',
+                  kind: FormFlutterFieldKind.autocomplete,
+                  label: 'City',
+                  hintText: 'Search city',
+                  textStyle: TextStyle(fontWeight: FontWeight.w600),
+                  options: [
+                    FormFlutterOption(value: 'dhaka', label: 'Dhaka'),
+                    FormFlutterOption(value: 'tokyo', label: 'Tokyo'),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final fields = FormFlutterFieldFactory.buildFieldsFromSchema(schema);
+        final otpField = fields[0] as FormFlutterOtpField;
+        final autocompleteField =
+            fields[1] as FormFlutterAutocompleteField<String>;
+
+        expect(otpField.hintText, '123456');
+        expect(otpField.textStyle?.fontSize, 20);
+        expect(autocompleteField.hintText, 'Search city');
+        expect(autocompleteField.textStyle?.fontWeight, FontWeight.w600);
+      },
+    );
   });
 
   group('Validation messages', () {
     test('supports localized validation defaults', () {
       final previous = FormFlutterValidationMessages.current;
-      FormFlutterValidationMessages.current = const FormFlutterValidationMessages(
-        requiredText: 'Required in test language.',
-      );
+      FormFlutterValidationMessages.current =
+          const FormFlutterValidationMessages(
+            requiredText: 'Required in test language.',
+          );
 
       final result = FormFlutterValidators.requiredText()(
         '',
@@ -179,10 +280,7 @@ void main() {
       tester,
     ) async {
       final controller = FormFlutterController(
-        initialValues: const {
-          'fullName': '',
-          'email': '',
-        },
+        initialValues: const {'fullName': '', 'email': ''},
       );
 
       addTearDown(controller.dispose);
@@ -228,7 +326,9 @@ void main() {
 
       expect(find.text('Continue'), findsOneWidget);
       expect(
-        tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Continue')).onPressed,
+        tester
+            .widget<FilledButton>(find.widgetWithText(FilledButton, 'Continue'))
+            .onPressed,
         isNull,
       );
 
@@ -236,7 +336,9 @@ void main() {
       await tester.pump();
 
       expect(
-        tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Continue')).onPressed,
+        tester
+            .widget<FilledButton>(find.widgetWithText(FilledButton, 'Continue'))
+            .onPressed,
         isNotNull,
       );
 
@@ -246,7 +348,9 @@ void main() {
       expect(find.text('Submit'), findsOneWidget);
       expect(find.text('Back'), findsOneWidget);
       expect(
-        tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Submit')).onPressed,
+        tester
+            .widget<FilledButton>(find.widgetWithText(FilledButton, 'Submit'))
+            .onPressed,
         isNotNull,
       );
 
@@ -263,10 +367,7 @@ void main() {
       tester,
     ) async {
       final controller = FormFlutterController(
-        initialValues: const {
-          'resume': null,
-          'signature': <List<Offset>>[],
-        },
+        initialValues: const {'resume': null, 'signature': <List<Offset>>[]},
       );
 
       addTearDown(controller.dispose);
@@ -314,7 +415,8 @@ void main() {
       await gesture.up();
       await tester.pumpAndSettle();
 
-      final signature = controller.snapshot.asMap()['signature'] as List<Object?>;
+      final signature =
+          controller.snapshot.asMap()['signature'] as List<Object?>;
       expect(signature, isNotEmpty);
       expect((signature.first as List<Object?>).length, greaterThan(0));
     });

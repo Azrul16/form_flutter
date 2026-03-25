@@ -18,7 +18,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  form_flutter: ^1.0.0
+  form_flutter: ^1.0.1
 ```
 
 Then run:

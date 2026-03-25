@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and follows the versioning used by the package.
 
+## 1.0.1
+
+- Finished incomplete preset-driven validation behavior for generated fields
+- Improved generated file and image field UX by exposing when picker callbacks are not configured
+- Aligned schema-generated field overrides with widget support, including OTP `hintText` and autocomplete `textStyle`
+- Added regression tests covering preset validation hints, picker configuration state, and schema override passthrough
+
 ## 1.0.0
 
 - Promoted `form_flutter` to a stable `1.0.0` release

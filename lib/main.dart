@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -67,8 +65,6 @@ class FormPlaygroundPage extends StatefulWidget {
 }
 
 class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
-  Map<String, Object?>? _savedSnapshot;
-
   final FormFlutterController _controller = FormFlutterController(
     initialValues: const {
       'fullName': '',
@@ -434,78 +430,16 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
   ];
 
   late final List<FormFlutterField<dynamic>> _factoryFields =
-      FormFlutterFieldFactory.buildFieldsFromPresets(
-        const [
-          FormFlutterFieldPreset(
-            key: 'meetingMode',
-            label: 'Meeting mode',
-            kind: FormFlutterFieldKind.autocomplete,
-            category: FormFlutterFieldCategory.appointment,
-            isRequired: true,
-            options: FormFlutterOptionSets.meetingModes,
-          ),
-        ],
-      );
-
-  late final List<FormFlutterSection> _sections = [
-    FormFlutterSection(
-      title: 'Registration',
-      description:
-          'Core identity, password, and OTP fields with sync and async validation.',
-      fields: [
-        _fields[0],
-        _fields[1],
-        _fields[2],
-        _fields[3],
-        _fields[5],
-        _fields[6],
-        _fields[7],
-      ],
-    ),
-    FormFlutterSection(
-      title: 'Project details',
-      description: 'Profile, role, plan, and colored option widgets.',
-      fields: [
-        _fields[4],
-        _fields[8],
-        _fields[9],
-        _fields[10],
-        _fields[11],
-        _fields[12],
-        _fields[13],
-      ],
-    ),
-    FormFlutterSection(
-      title: 'Schedule',
-      description: 'Date and time fields now support formatter hooks.',
-      fields: [
-        _fields[14],
-        _fields[15],
-        _fields[16],
-        _factoryFields.first,
-      ],
-    ),
-    FormFlutterSection(
-      title: 'New field kinds',
-      description:
-          'Search, autocomplete, file/image preview, and serializable signature capture.',
-      fields: [
-        _fields[19],
-        _fields[20],
-        _fields[21],
-        _fields[22],
-        _fields[23],
-      ],
-    ),
-    FormFlutterSection(
-      title: 'Consent',
-      description: 'Stepper footer, validation summary, and submit guards.',
-      fields: [
-        _fields[17],
-        _fields[18],
-      ],
-    ),
-  ];
+      FormFlutterFieldFactory.buildFieldsFromPresets(const [
+        FormFlutterFieldPreset(
+          key: 'meetingMode',
+          label: 'Meeting mode',
+          kind: FormFlutterFieldKind.autocomplete,
+          category: FormFlutterFieldCategory.appointment,
+          isRequired: true,
+          options: FormFlutterOptionSets.meetingModes,
+        ),
+      ]);
 
   static Future<FormFlutterFileValue?> _pickDemoFile(
     BuildContext context,
@@ -534,46 +468,77 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
   }
 
   static final Uint8List _demoImageBytes = Uint8List.fromList(const [
-    137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1,
-    0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84,
-    120, 156, 99, 248, 207, 192, 240, 31, 0, 5, 0, 1, 255, 137, 153, 61, 29,
-    0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
+    137,
+    80,
+    78,
+    71,
+    13,
+    10,
+    26,
+    10,
+    0,
+    0,
+    0,
+    13,
+    73,
+    72,
+    68,
+    82,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    8,
+    6,
+    0,
+    0,
+    0,
+    31,
+    21,
+    196,
+    137,
+    0,
+    0,
+    0,
+    13,
+    73,
+    68,
+    65,
+    84,
+    120,
+    156,
+    99,
+    248,
+    207,
+    192,
+    240,
+    31,
+    0,
+    5,
+    0,
+    1,
+    255,
+    137,
+    153,
+    61,
+    29,
+    0,
+    0,
+    0,
+    0,
+    73,
+    69,
+    78,
+    68,
+    174,
+    66,
+    96,
+    130,
   ]);
-
-  void _exportSnapshot() {
-    setState(() {
-      _savedSnapshot = _controller.toJson();
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Serialized form state saved from controller.'),
-      ),
-    );
-  }
-
-  void _importSnapshot() {
-    final savedSnapshot = _savedSnapshot;
-    if (savedSnapshot == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Export a snapshot first to import it.')),
-      );
-      return;
-    }
-
-    _controller.fromJson(savedSnapshot);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Controller restored from serialized state.'),
-      ),
-    );
-  }
-
-  void _resetForm() {
-    _controller.reset();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Form reset to initial values.')),
-    );
-  }
 
   @override
   void dispose() {
@@ -595,7 +560,6 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final isCompact = constraints.maxWidth < 1040;
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Center(
@@ -607,22 +571,7 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
                         const _BackdropGlow(),
                         const _TopBanner(),
                         const SizedBox(height: 24),
-                        if (isCompact) ...[
-                          _buildFormCard(context),
-                          const SizedBox(height: 20),
-                          _buildSummaryCard(context),
-                        ] else
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(flex: 8, child: _buildFormCard(context)),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                flex: 4,
-                                child: _buildSummaryCard(context),
-                              ),
-                            ],
-                          ),
+                        _buildFormCard(context),
                       ],
                     ),
                   ),
@@ -652,178 +601,17 @@ class _FormPlaygroundPageState extends State<FormPlaygroundPage> {
       ),
       child: DynamicFormFlutter(
         controller: _controller,
-        fields: _fields,
-        sections: _sections,
+        fields: [..._fields, ..._factoryFields],
         submitLabel: 'Create Form',
-        useStepper: true,
         showValidationSummary: true,
-        disableSubmitUntilDirty: true,
         scrollToFirstError: true,
         autovalidateMode: AutovalidateMode.onUserInteraction,
-        renderFieldsAfterHeader: true,
-        header: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _SectionHeader(
-              eyebrow: 'Registration Form',
-              title: 'Project onboarding',
-            ),
-            const _SectionSummary(
-              text:
-                  'A polished package demo with sections, stepper navigation, validation summaries, formatter hooks, field factory output, file previews, and signature capture.',
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                FilledButton.icon(
-                  onPressed: _exportSnapshot,
-                  icon: const Icon(Icons.upload_file_outlined),
-                  label: const Text('Export JSON'),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _importSnapshot,
-                  icon: const Icon(Icons.download_outlined),
-                  label: const Text('Import JSON'),
-                ),
-                TextButton.icon(
-                  onPressed: _resetForm,
-                  icon: const Icon(Icons.restart_alt_outlined),
-                  label: const Text('Reset'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
         onSubmit: (values) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Submitted: ${values.asMap()}')),
           );
         },
       ),
-    );
-  }
-
-  Widget _buildSummaryCard(BuildContext context) {
-    Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 24,
-            offset: Offset(0, 12),
-          ),
-        ],
-      ),
-      child: _PlaygroundStatePreview(
-        controller: _controller,
-        savedSnapshot: _savedSnapshot,
-      ),
-    );
-  }
-}
-
-class _PlaygroundStatePreview extends StatelessWidget {
-  const _PlaygroundStatePreview({
-    required this.controller,
-    required this.savedSnapshot,
-  });
-
-  final FormFlutterController controller;
-  final Map<String, Object?>? savedSnapshot;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return ValueListenableBuilder<Map<String, Object?>>(
-      valueListenable: controller.valuesListenable,
-      builder: (context, values, _) {
-        return ValueListenableBuilder<Map<String, bool>>(
-          valueListenable: controller.touchedFieldsListenable,
-          builder: (context, touchedFields, _) {
-            return ValueListenableBuilder<Map<String, bool>>(
-              valueListenable: controller.dirtyFieldsListenable,
-              builder: (context, dirtyFields, _) {
-                final touchedCount = touchedFields.values
-                    .where((value) => value)
-                    .length;
-                final dirtyCount = dirtyFields.values
-                    .where((value) => value)
-                    .length;
-                final currentJson = const JsonEncoder.withIndent(
-                  '  ',
-                ).convert(controller.toJson());
-                final savedJson = savedSnapshot == null
-                    ? 'No exported snapshot yet.'
-                    : const JsonEncoder.withIndent('  ').convert(savedSnapshot);
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Live values',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Preview values, serialized JSON, and touched or dirty tracking while the form is edited.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF94A3B8),
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        const _PreviewChip(
-                          label: 'Text',
-                          tone: Color(0xFF0F766E),
-                        ),
-                        _PreviewChip(
-                          label: 'Touched $touchedCount',
-                          tone: const Color(0xFF38BDF8),
-                        ),
-                        _PreviewChip(
-                          label: 'Dirty $dirtyCount',
-                          tone: const Color(0xFFF97316),
-                        ),
-                        _PreviewChip(
-                          label: controller.hasDirtyFields
-                              ? 'Unsaved'
-                              : 'Clean',
-                          tone: controller.hasDirtyFields
-                              ? const Color(0xFFEF4444)
-                              : const Color(0xFF22C55E),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    _SummaryBlock(title: 'Values', content: values.toString()),
-                    const SizedBox(height: 14),
-                    _SummaryBlock(title: 'Current JSON', content: currentJson),
-                    const SizedBox(height: 14),
-                    _SummaryBlock(
-                      title: 'Last Exported JSON',
-                      content: savedJson,
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-        );
-      },
     );
   }
 }
@@ -856,37 +644,11 @@ class _TopBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'form_flutter',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: const Color(0xFFCCFBF1),
-              letterSpacing: 1.4,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
             'Full Example Form',
             style: theme.textTheme.headlineMedium?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w900,
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'All implemented field widgets with readable selected states, stronger styling controls, and a cleaner package showcase.',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFFE0F2FE),
-            ),
-          ),
-          const SizedBox(height: 18),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: const [
-              _BannerStat(label: 'Field types', value: '13+'),
-              _BannerStat(label: 'Validation', value: 'Sync + Async'),
-              _BannerStat(label: 'Styling', value: 'Per option'),
-            ],
           ),
         ],
       ),
@@ -942,166 +704,6 @@ class _GlowOrb extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: RadialGradient(colors: colors),
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.eyebrow, required this.title});
-
-  final String eyebrow;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            eyebrow,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: const Color(0xFF0F766E),
-              letterSpacing: 1.0,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF101828),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionSummary extends StatelessWidget {
-  const _SectionSummary({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: const Color(0xFF475467),
-          height: 1.5,
-        ),
-      ),
-    );
-  }
-}
-
-class _SummaryBlock extends StatelessWidget {
-  const _SummaryBlock({required this.title, required this.content});
-
-  final String title;
-  final String content;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF111827),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF1F2937)),
-          ),
-          child: Text(
-            content,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFFE5E7EB),
-              fontFamily: 'monospace',
-              height: 1.5,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PreviewChip extends StatelessWidget {
-  const _PreviewChip({required this.label, required this.tone});
-
-  final String label;
-  final Color tone;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: tone.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: tone.withValues(alpha: 0.28)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: tone, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-}
-
-class _BannerStat extends StatelessWidget {
-  const _BannerStat({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0x1AFFFFFF),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0x22FFFFFF)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: const Color(0xFFCCFBF1),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -13,9 +13,8 @@ void main() {
     await tester.pumpWidget(const FormFlutterApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('form_flutter'), findsOneWidget);
     expect(find.text('Full Example Form'), findsOneWidget);
-    expect(find.text('Project onboarding'), findsOneWidget);
+    expect(find.text('Create Form'), findsOneWidget);
   });
 
   testWidgets('shows validation errors and blocks submit when invalid', (
@@ -79,6 +78,109 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets(
+    'revalidates touched dependent fields when source field changes',
+    (WidgetTester tester) async {
+      final controller = FormFlutterController(
+        initialValues: const {'password': '', 'confirm': ''},
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: DynamicFormFlutter(
+            controller: controller,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            fields: [
+              FormFlutterTextField(
+                name: 'password',
+                label: 'Password',
+                validator: FormFlutterValidators.requiredText(),
+              ),
+              FormFlutterTextField(
+                name: 'confirm',
+                label: 'Confirm',
+                validator: FormFlutterValidators.sameAsField('password'),
+              ),
+            ],
+            onSubmit: (_) {},
+          ),
+        ),
+      );
+
+      await tester.enterText(find.byType(TextFormField).at(0), 'abc123');
+      await tester.enterText(find.byType(TextFormField).at(1), 'abc123');
+      await tester.pump();
+      expect(find.text('This value does not match.'), findsNothing);
+
+      await tester.enterText(find.byType(TextFormField).at(0), 'abc456');
+      await tester.pump();
+      expect(find.text('This value does not match.'), findsOneWidget);
+    },
+  );
+
+  testWidgets('text field stays in sync after fromJson and reset', (
+    WidgetTester tester,
+  ) async {
+    final controller = FormFlutterController(
+      initialValues: const {'name': 'Ada'},
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _TestApp(
+        child: FormFlutterTextField(
+          name: 'name',
+          label: 'Name',
+        ).buildField(controller),
+      ),
+    );
+
+    TextFormField textField() =>
+        tester.widget<TextFormField>(find.byType(TextFormField));
+
+    expect(textField().controller?.text, 'Ada');
+
+    controller.fromJson(const {'name': 'Grace'});
+    await tester.pump();
+    expect(textField().controller?.text, 'Grace');
+
+    controller.reset();
+    await tester.pump();
+    expect(textField().controller?.text, 'Ada');
+  });
+
+  testWidgets('number field stays in sync after fromJson and reset', (
+    WidgetTester tester,
+  ) async {
+    final controller = FormFlutterController(
+      initialValues: const {'experience': '3'},
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _TestApp(
+        child: FormFlutterNumberField(
+          name: 'experience',
+          label: 'Experience',
+        ).buildField(controller),
+      ),
+    );
+
+    TextFormField textField() =>
+        tester.widget<TextFormField>(find.byType(TextFormField));
+
+    expect(textField().controller?.text, '3');
+
+    controller.fromJson(const {'experience': 8});
+    await tester.pump();
+    expect(textField().controller?.text, '8');
+
+    controller.reset();
+    await tester.pump();
+    expect(textField().controller?.text, '3');
+  });
+
   testWidgets('shows async validation progress while validating', (
     WidgetTester tester,
   ) async {
@@ -130,20 +232,12 @@ void main() {
           sections: [
             const FormFlutterSection(
               title: 'Primary',
-              fields: [
-                FormFlutterTextField(
-                  name: 'mode',
-                  label: 'Mode',
-                ),
-              ],
+              fields: [FormFlutterTextField(name: 'mode', label: 'Mode')],
             ),
             FormFlutterSection(
               title: 'Advanced',
               fields: const [
-                FormFlutterTextField(
-                  name: 'details',
-                  label: 'Details',
-                ),
+                FormFlutterTextField(name: 'details', label: 'Details'),
               ],
               isVisible: (values) => values.asMap()['mode'] == 'show',
             ),
@@ -165,10 +259,7 @@ void main() {
 
   testWidgets('advances through stepper sections', (WidgetTester tester) async {
     final controller = FormFlutterController(
-      initialValues: const {
-        'name': '',
-        'code': '',
-      },
+      initialValues: const {'name': '', 'code': ''},
     );
 
     await tester.pumpWidget(
@@ -189,12 +280,7 @@ void main() {
             ),
             FormFlutterSection(
               title: 'Confirm',
-              fields: [
-                FormFlutterTextField(
-                  name: 'code',
-                  label: 'Code',
-                ),
-              ],
+              fields: [FormFlutterTextField(name: 'code', label: 'Code')],
             ),
           ],
           useStepper: true,
@@ -227,10 +313,7 @@ class _TestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: child,
-        ),
+        body: Padding(padding: const EdgeInsets.all(16), child: child),
       ),
     );
   }

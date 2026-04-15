@@ -1,16 +1,11 @@
-import 'package:device_preview/device_preview.dart';
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import 'form_flutter.dart';
 
 void main() {
-  runApp(
-    DevicePreview(
-      enabled: !kReleaseMode,
-      builder: (context) => const FormFlutterApp(),
-    ),
-  );
+  runApp(const FormFlutterApp());
 }
 
 class FormFlutterApp extends StatelessWidget {
@@ -21,8 +16,6 @@ class FormFlutterApp extends StatelessWidget {
     return MaterialApp(
       title: 'Form Flutter',
       debugShowCheckedModeBanner: false,
-      locale: DevicePreview.locale(context),
-      builder: DevicePreview.appBuilder,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F766E)),
         scaffoldBackgroundColor: const Color(0xFFF3F7F6),

@@ -10,6 +10,7 @@ dependencies:
     sdk: flutter
   form_flutter:
     path: ..
+  device_preview: ^1.3.1
 
 dev_dependencies:
   flutter_test:

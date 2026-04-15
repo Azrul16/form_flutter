@@ -12,13 +12,19 @@ A Flutter package for building reusable, schema-friendly forms with shared valid
 - Common option sets for fields like gender, marital status, degree, employment type, payment method, and more
 - Dedicated example app and local playground demonstrating controller export, import, reset, live state previews, and schema-generated forms
 
+## What's New In 1.0.2
+
+- Text and number inputs now stay visually in sync when values are changed through controller helpers like `fromJson(...)` and `reset(...)`
+- `DynamicFormFlutter` autovalidation now revalidates touched dependent fields, improving flows like confirm-password checks when source values change
+- `device_preview` is now demo-only in `example/`, keeping the package runtime dependency surface cleaner
+
 ## Getting started
 
 Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  form_flutter: ^1.0.1
+  form_flutter: ^1.0.2
 ```
 
 Then run:
@@ -460,6 +466,7 @@ Examples of shared option sets:
 This package includes:
 
 - a dedicated `example/` app for pub.dev example points
+- optional demo tooling (`device_preview`) scoped to `example/` only
 - a root app in `lib/main.dart` that acts as a local full-form playground
 - live examples of controller export, import, reset, touched or dirty state previews, and schema-generated forms
 - controller tests covering serialization, reset behavior, and field-state tracking

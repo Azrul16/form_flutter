@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'form_flutter_controller.dart';
 import 'form_flutter_phone_countries.dart';
 
+part 'form_flutter_field_inputs.dart';
+
 /// Synchronous validator signature used by form fields.
 typedef FormFlutterValidator<T> =
     String? Function(T value, FormFlutterValues values);
@@ -194,33 +196,20 @@ class FormFlutterTextField extends _FormFlutterInputField<String> {
   @override
   Widget buildField(FormFlutterController controller) {
     if (enableObscureTextToggle && obscureText) {
-      return _FormFlutterPasswordField(field: this, controller: controller);
+      final passwordField = _FormFlutterPasswordInput(
+        field: this,
+        controller: controller,
+      );
+      return allowPaste
+          ? passwordField
+          : _FormFlutterPasteGuard(child: passwordField);
     }
 
-    final field = ValueListenableBuilder<Map<String, String?>>(
-      valueListenable: controller.errorsListenable,
-      builder: (context, _, _) {
-        return TextFormField(
-          initialValue: normalizeValue(controller.snapshot.asMap()[name]),
-          keyboardType: keyboardType,
-          textInputAction: textInputAction,
-          maxLines: obscureText ? 1 : maxLines,
-          obscureText: obscureText,
-          style: textStyle,
-          enableInteractiveSelection: allowPaste,
-          contextMenuBuilder: allowPaste
-              ? null
-              : (context, editableTextState) => const SizedBox.shrink(),
-          onChanged: (value) {
-            controller.setValue(name, value);
-            controller.setError(name, null);
-          },
-          decoration: decoration(controller),
-        );
-      },
+    final textField = _FormFlutterTextInput(
+      field: this,
+      controller: controller,
     );
-
-    return allowPaste ? field : _FormFlutterPasteGuard(child: field);
+    return allowPaste ? textField : _FormFlutterPasteGuard(child: textField);
   }
 }
 
@@ -284,70 +273,6 @@ class FormFlutterSearchField extends _FormFlutterInputField<String> {
   @override
   Widget buildField(FormFlutterController controller) {
     return _FormFlutterSearchInput(field: this, controller: controller);
-  }
-}
-
-class _FormFlutterPasswordField extends StatefulWidget {
-  const _FormFlutterPasswordField({
-    required this.field,
-    required this.controller,
-  });
-
-  final FormFlutterTextField field;
-  final FormFlutterController controller;
-
-  @override
-  State<_FormFlutterPasswordField> createState() =>
-      _FormFlutterPasswordFieldState();
-}
-
-class _FormFlutterPasswordFieldState extends State<_FormFlutterPasswordField> {
-  late bool _obscure = widget.field.obscureText;
-
-  @override
-  Widget build(BuildContext context) {
-    final field = ValueListenableBuilder<Map<String, String?>>(
-      valueListenable: widget.controller.errorsListenable,
-      builder: (context, _, _) {
-        final baseDecoration = widget.field.decoration(widget.controller);
-        return TextFormField(
-          initialValue: widget.field.normalizeValue(
-            widget.controller.snapshot.asMap()[widget.field.name],
-          ),
-          keyboardType: widget.field.keyboardType,
-          textInputAction: widget.field.textInputAction,
-          maxLines: 1,
-          obscureText: _obscure,
-          style: widget.field.textStyle,
-          enableInteractiveSelection: widget.field.allowPaste,
-          contextMenuBuilder: widget.field.allowPaste
-              ? null
-              : (context, editableTextState) => const SizedBox.shrink(),
-          onChanged: (value) {
-            widget.controller.setValue(widget.field.name, value);
-            widget.controller.setError(widget.field.name, null);
-          },
-          decoration: baseDecoration.copyWith(
-            suffixIcon: IconButton(
-              onPressed: () {
-                setState(() {
-                  _obscure = !_obscure;
-                });
-              },
-              icon: Icon(
-                _obscure
-                    ? Icons.visibility_off_outlined
-                    : Icons.visibility_outlined,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-
-    return widget.field.allowPaste
-        ? field
-        : _FormFlutterPasteGuard(child: field);
   }
 }
 
@@ -639,28 +564,7 @@ class FormFlutterNumberField extends _FormFlutterInputField<double?> {
 
   @override
   Widget buildField(FormFlutterController controller) {
-    return ValueListenableBuilder<Map<String, String?>>(
-      valueListenable: controller.errorsListenable,
-      builder: (context, _, _) {
-        final existingValue = controller.snapshot.asMap()[name];
-        final initialValue = existingValue == null
-            ? ''
-            : existingValue.toString();
-        return TextFormField(
-          initialValue: initialValue,
-          keyboardType: TextInputType.numberWithOptions(
-            decimal: allowDecimals,
-            signed: false,
-          ),
-          style: textStyle,
-          onChanged: (value) {
-            controller.setValue(name, value);
-            controller.setError(name, null);
-          },
-          decoration: decoration(controller),
-        );
-      },
-    );
+    return _FormFlutterNumberInput(field: this, controller: controller);
   }
 }
 

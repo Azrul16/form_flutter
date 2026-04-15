@@ -1,10 +1,17 @@
 import 'dart:convert';
 
+import 'package:device_preview/device_preview.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:form_flutter/form_flutter.dart';
 
 void main() {
-  runApp(const ExampleApp());
+  runApp(
+    DevicePreview(
+      enabled: !kReleaseMode,
+      builder: (context) => const ExampleApp(),
+    ),
+  );
 }
 
 class ExampleApp extends StatelessWidget {
@@ -15,6 +22,8 @@ class ExampleApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'form_flutter example',
+      locale: DevicePreview.locale(context),
+      builder: DevicePreview.appBuilder,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF155EEF),
@@ -441,7 +450,7 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'This v1.0.1 sample uses decoration overrides, option colors, icons, a country-aware phone field, explicit picker UX, and controller serialization helpers.',
+                                      'This v1.0.2 sample uses decoration overrides, option colors, icons, a country-aware phone field, explicit picker UX, and controller serialization helpers.',
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
@@ -568,7 +577,7 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'This v1.0.1 sample uses FormFlutterSchema plus preset overrides to build a stepper form with stronger generated validation and without custom field factories.',
+                                      'This v1.0.2 sample uses FormFlutterSchema plus preset overrides to build a stepper form with stronger generated validation and without custom field factories.',
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
@@ -792,7 +801,7 @@ class _ExampleHeader extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'v1.0.1 explores direct field definitions, controller helpers, explicit picker UX, and schema-generated forms in one example app.',
+            'v1.0.2 explores direct field definitions, controller helpers, explicit picker UX, and schema-generated forms in one example app.',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: const Color(0xFFE0EAFF),
               height: 1.5,

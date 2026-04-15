@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and follows the versioning used by the package.
 
+## 1.0.2
+
+- Version bump to `1.0.2`
+- Updated package docs and example copy to reference `1.0.2`
+
 ## 1.0.1
 
 - Finished incomplete preset-driven validation behavior for generated fields

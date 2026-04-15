@@ -18,10 +18,13 @@ class FormFlutterSection {
 
   /// The section title shown above its fields.
   final String title;
+
   /// Optional supporting text shown below the section title.
   final String? description;
+
   /// The flat list of fields rendered when no sections are supplied.
   final List<FormFlutterField<dynamic>> fields;
+
   /// Optional visibility rule based on the current form values.
   final FormFlutterSectionVisibility? isVisible;
 }
@@ -42,16 +45,22 @@ class FormFlutterUiText {
 
   /// Default title shown when no custom header is provided.
   final String defaultTitle;
+
   /// Default description shown when no custom header is provided.
   final String defaultDescription;
+
   /// Heading used for the validation summary panel.
   final String validationSummaryTitle;
+
   /// Label shown while a field is validating asynchronously.
   final String asyncValidationLabel;
+
   /// Button label for advancing to the next step.
   final String continueLabel;
+
   /// Button label for returning to the previous step.
   final String backLabel;
+
   /// Prefix used when formatting step progress text.
   final String stepLabelPrefix;
 
@@ -87,36 +96,52 @@ class DynamicFormFlutter extends StatefulWidget {
 
   /// The controller that stores values, errors, and interaction state.
   final FormFlutterController controller;
+
   /// The flat list of fields rendered when no sections are supplied.
   final List<FormFlutterField<dynamic>> fields;
+
   /// Optional grouped sections used for grouped or stepped layouts.
   final List<FormFlutterSection>? sections;
+
   /// Called with the latest values when the form is submitted successfully.
   final ValueChanged<FormFlutterValues> onSubmit;
+
   /// Label used by the primary submit button.
   final String submitLabel;
+
   /// Optional custom header widget shown above the form body.
   final Widget? header;
+
   /// Whether a custom header should be followed by the generated fields.
   final bool renderFieldsAfterHeader;
+
   /// Controls when validation errors are recomputed automatically.
   final AutovalidateMode autovalidateMode;
+
   /// Whether the form should scroll to the first invalid field.
   final bool scrollToFirstError;
+
   /// Whether to render a summary panel for visible validation errors.
   final bool showValidationSummary;
+
   /// Whether the submit action should remain disabled until fields are valid.
   final bool disableSubmitUntilValid;
+
   /// Whether the submit action should remain disabled until changes are made.
   final bool disableSubmitUntilDirty;
+
   /// Whether async validation progress indicators should be shown.
   final bool showAsyncValidationHints;
+
   /// Whether the form should render one section at a time as a stepper.
   final bool useStepper;
+
   /// Vertical spacing between rendered fields.
   final double fieldSpacing;
+
   /// Vertical spacing between rendered sections.
   final double sectionSpacing;
+
   /// Text overrides used by the form widget.
   final FormFlutterUiText uiText;
 
@@ -128,10 +153,14 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
   final Map<String, GlobalKey> _fieldKeys = <String, GlobalKey>{};
   bool _submitting = false;
   int _currentStep = 0;
+  late Map<String, Object?> _previousValues;
 
   @override
   void initState() {
     super.initState();
+    _previousValues = Map<String, Object?>.from(
+      widget.controller.snapshot.asMap(),
+    );
     widget.controller.valuesListenable.addListener(_handleValueChange);
   }
 
@@ -140,12 +169,15 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
       oldWidget.controller.valuesListenable.removeListener(_handleValueChange);
+      _previousValues = Map<String, Object?>.from(
+        widget.controller.snapshot.asMap(),
+      );
       widget.controller.valuesListenable.addListener(_handleValueChange);
     }
   }
 
   @override
-    void dispose() {
+  void dispose() {
     widget.controller.valuesListenable.removeListener(_handleValueChange);
     super.dispose();
   }
@@ -154,33 +186,60 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
     if (!mounted) {
       return;
     }
+    final currentValues = Map<String, Object?>.from(
+      widget.controller.snapshot.asMap(),
+    );
+
     if (widget.autovalidateMode == AutovalidateMode.disabled) {
+      _previousValues = currentValues;
       setState(() {});
       return;
     }
 
+    final changedFields = _findChangedFields(_previousValues, currentValues);
+    if (changedFields.isEmpty) {
+      return;
+    }
+
     for (final field in _visibleFields) {
+      if (!changedFields.contains(field.name) &&
+          widget.controller.error(field.name) == null &&
+          !widget.controller.isTouched(field.name)) {
+        continue;
+      }
       widget.controller.setError(field.name, field.validate(widget.controller));
     }
+
+    _previousValues = currentValues;
     setState(() {});
   }
 
+  Set<String> _findChangedFields(
+    Map<String, Object?> before,
+    Map<String, Object?> after,
+  ) {
+    final allKeys = <String>{...before.keys, ...after.keys};
+    final changed = <String>{};
+    for (final key in allKeys) {
+      if (before[key] != after[key]) {
+        changed.add(key);
+      }
+    }
+    return changed;
+  }
+
   List<FormFlutterSection> get _visibleSections {
-    final sections = widget.sections ??
-        [
-          FormFlutterSection(
-            title: '',
-            fields: widget.fields,
-          ),
-        ];
+    final sections =
+        widget.sections ??
+        [FormFlutterSection(title: '', fields: widget.fields)];
     final values = widget.controller.snapshot;
-    return sections.where((section) => section.isVisible?.call(values) ?? true).toList();
+    return sections
+        .where((section) => section.isVisible?.call(values) ?? true)
+        .toList();
   }
 
   List<FormFlutterField<dynamic>> get _visibleFields {
-    return [
-      for (final section in _visibleSections) ...section.fields,
-    ];
+    return [for (final section in _visibleSections) ...section.fields];
   }
 
   List<FormFlutterField<dynamic>> get _currentStepFields {
@@ -205,7 +264,9 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
       return;
     }
 
-    if (advanceStep && widget.useStepper && _currentStep < _visibleSections.length - 1) {
+    if (advanceStep &&
+        widget.useStepper &&
+        _currentStep < _visibleSections.length - 1) {
       setState(() {
         _currentStep++;
       });
@@ -282,7 +343,9 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
   }
 
   bool get _submitDisabled {
-    final targetFields = widget.useStepper ? _currentStepFields : _visibleFields;
+    final targetFields = widget.useStepper
+        ? _currentStepFields
+        : _visibleFields;
     if (_submitting) {
       return true;
     }
@@ -292,7 +355,9 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
     if (!widget.disableSubmitUntilValid) {
       return false;
     }
-    return targetFields.any((field) => field.validate(widget.controller) != null);
+    return targetFields.any(
+      (field) => field.validate(widget.controller) != null,
+    );
   }
 
   List<String> get _visibleErrors {
@@ -331,8 +396,8 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
                     Text(
                       widget.uiText.asyncValidationLabel,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: const Color(0xFF667085),
-                          ),
+                        color: const Color(0xFF667085),
+                      ),
                     ),
                   ],
                 ),
@@ -351,17 +416,17 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
         if (section.title.isNotEmpty)
           Text(
             section.title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
         if (section.title.isNotEmpty && section.description != null) ...[
           const SizedBox(height: 6),
           Text(
             section.description!,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF667085),
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF667085)),
           ),
         ],
         SizedBox(height: section.title.isNotEmpty ? 16 : 0),
@@ -391,9 +456,9 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
         Text(
           widget.uiText.stepLabel(stepIndex + 1, _visibleSections.length),
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: const Color(0xFF667085),
-                fontWeight: FontWeight.w700,
-              ),
+            color: const Color(0xFF667085),
+            fontWeight: FontWeight.w700,
+          ),
         ),
       );
       children.add(const SizedBox(height: 12));
@@ -421,9 +486,9 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
         0,
         Text(
           widget.uiText.defaultTitle,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
       );
       children.insert(1, const SizedBox(height: 8));
@@ -431,9 +496,9 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
         2,
         Text(
           widget.uiText.defaultDescription,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFF475467),
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: const Color(0xFF475467)),
         ),
       );
       children.insert(3, const SizedBox(height: 24));
@@ -522,9 +587,9 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
                     Text(
                       widget.uiText.validationSummaryTitle,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF991B1B),
-                          ),
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF991B1B),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     for (final error in visibleErrors)
@@ -532,9 +597,8 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
                           error,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: const Color(0xFFB42318),
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: const Color(0xFFB42318)),
                         ),
                       ),
                   ],

@@ -298,6 +298,357 @@ class FormFlutterSchemaField {
   }
 }
 
+/// Ready-made schemas for common production form workflows.
+abstract final class FormFlutterSchemaTemplates {
+  /// Account registration with username, email, password confirmation, and terms.
+  static FormFlutterSchema accountRegistration({
+    Map<String, Object?> initialValues = const {},
+  }) {
+    return FormFlutterSchema(
+      initialValues: initialValues,
+      sections: [
+        FormFlutterSchemaSection(
+          title: 'Account',
+          fields: [
+            FormFlutterSchemaField.fromPreset(_preset('username')),
+            FormFlutterSchemaField.fromPreset(_preset('email')),
+            FormFlutterSchemaField.fromPreset(_preset('password')),
+            FormFlutterSchemaField.fromPreset(_preset('confirm_password')),
+          ],
+        ),
+        FormFlutterSchemaSection(
+          title: 'Consent',
+          fields: [
+            FormFlutterSchemaField.fromPreset(_preset('terms_accepted')),
+            FormFlutterSchemaField.fromPreset(_preset('newsletter')),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Profile form with personal, contact, address, and preference sections.
+  static FormFlutterSchema profile({
+    Map<String, Object?> initialValues = const {},
+  }) {
+    return FormFlutterSchema(
+      initialValues: initialValues,
+      sections: [
+        FormFlutterSchemaSection(
+          title: 'Personal',
+          fields: [
+            FormFlutterSchemaField.fromPreset(_preset('full_name')),
+            FormFlutterSchemaField.fromPreset(_preset('date_of_birth')),
+            FormFlutterSchemaField.fromPreset(_preset('gender')),
+            FormFlutterSchemaField.fromPreset(_preset('profile_photo')),
+          ],
+        ),
+        FormFlutterSchemaSection(
+          title: 'Contact',
+          fields: [
+            FormFlutterSchemaField.fromPreset(_preset('email')),
+            FormFlutterSchemaField.fromPreset(_preset('phone')),
+            FormFlutterSchemaField.fromPreset(_preset('website')),
+          ],
+        ),
+        FormFlutterSchemaSection(
+          title: 'Address',
+          fields: [
+            FormFlutterSchemaField.fromPreset(_preset('street_address')),
+            FormFlutterSchemaField.fromPreset(_preset('city')),
+            FormFlutterSchemaField.fromPreset(_preset('state')),
+            FormFlutterSchemaField.fromPreset(_preset('postal_code')),
+            FormFlutterSchemaField.fromPreset(_preset('country')),
+          ],
+        ),
+        FormFlutterSchemaSection(
+          title: 'Preferences',
+          fields: [
+            FormFlutterSchemaField.fromPreset(
+              _preset('preferred_contact_method'),
+            ),
+            FormFlutterSchemaField.fromPreset(_preset('theme_preference')),
+            FormFlutterSchemaField.fromPreset(_preset('interests')),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Job application with personal details, professional info, resume, and consent.
+  static FormFlutterSchema jobApplication({
+    Map<String, Object?> initialValues = const {},
+  }) {
+    return FormFlutterSchema(
+      initialValues: initialValues,
+      sections: [
+        FormFlutterSchemaSection(
+          title: 'Candidate',
+          fields: [
+            FormFlutterSchemaField.fromPreset(_preset('full_name')),
+            FormFlutterSchemaField.fromPreset(_preset('email')),
+            FormFlutterSchemaField.fromPreset(_preset('phone')),
+          ],
+        ),
+        FormFlutterSchemaSection(
+          title: 'Professional',
+          fields: [
+            FormFlutterSchemaField.fromPreset(_preset('company_name')),
+            FormFlutterSchemaField.fromPreset(_preset('designation')),
+            FormFlutterSchemaField.fromPreset(_preset('employment_type')),
+            FormFlutterSchemaField.fromPreset(_preset('industry')),
+            FormFlutterSchemaField.fromPreset(_preset('skills')),
+            FormFlutterSchemaField.fromPreset(_preset('resume')),
+          ],
+        ),
+        FormFlutterSchemaSection(
+          title: 'Consent',
+          fields: [
+            FormFlutterSchemaField.fromPreset(_preset('privacy_accepted')),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Appointment booking with contact details, date/time, mode, and reason.
+  static FormFlutterSchema appointmentBooking({
+    Map<String, Object?> initialValues = const {},
+  }) {
+    return FormFlutterSchema(
+      initialValues: initialValues,
+      sections: [
+        FormFlutterSchemaSection(
+          title: 'Contact',
+          fields: [
+            FormFlutterSchemaField.fromPreset(_preset('full_name')),
+            FormFlutterSchemaField.fromPreset(_preset('email')),
+            FormFlutterSchemaField.fromPreset(_preset('phone')),
+          ],
+        ),
+        FormFlutterSchemaSection(
+          title: 'Appointment',
+          fields: [
+            FormFlutterSchemaField.fromPreset(_preset('appointment_date')),
+            FormFlutterSchemaField.fromPreset(_preset('appointment_time')),
+            FormFlutterSchemaField.fromPreset(_preset('meeting_mode')),
+            FormFlutterSchemaField.fromPreset(_preset('priority')),
+            FormFlutterSchemaField.fromPreset(_preset('reason')),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Customer feedback with rating, satisfaction, and long-form message.
+  static FormFlutterSchema feedback({
+    Map<String, Object?> initialValues = const {},
+  }) {
+    return FormFlutterSchema(
+      initialValues: initialValues,
+      sections: [
+        FormFlutterSchemaSection(
+          title: 'Feedback',
+          fields: [
+            FormFlutterSchemaField.fromPreset(_preset('rating')),
+            FormFlutterSchemaField.fromPreset(_preset('satisfaction')),
+            FormFlutterSchemaField.fromPreset(_preset('feedback')),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Simple checkout form for quantity, size, payment, and instructions.
+  static FormFlutterSchema checkout({
+    Map<String, Object?> initialValues = const {},
+  }) {
+    return FormFlutterSchema(
+      initialValues: initialValues,
+      sections: [
+        FormFlutterSchemaSection(
+          title: 'Order',
+          fields: [
+            FormFlutterSchemaField.fromPreset(_preset('quantity')),
+            FormFlutterSchemaField.fromPreset(_preset('size')),
+            FormFlutterSchemaField.fromPreset(_preset('payment_method')),
+            FormFlutterSchemaField.fromPreset(_preset('special_instructions')),
+          ],
+        ),
+      ],
+    );
+  }
+
+  static FormFlutterFieldPreset _preset(String key) {
+    return FormFlutterCatalog.byKey(key);
+  }
+}
+
+/// Renders a schema directly, including controller and section construction.
+class FormFlutterSchemaForm extends StatefulWidget {
+  /// Creates a form from a schema with optional factory and UI overrides.
+  const FormFlutterSchemaForm({
+    super.key,
+    required this.schema,
+    required this.onSubmit,
+    this.controller,
+    this.buildersByName = const {},
+    this.buildersByKind = const {},
+    this.filePicker,
+    this.imagePicker,
+    this.onChanged,
+    this.onReset,
+    this.submitLabel = 'Submit',
+    this.resetLabel = 'Reset',
+    this.header,
+    this.renderFieldsAfterHeader = false,
+    this.autovalidateMode = AutovalidateMode.disabled,
+    this.scrollToFirstError = false,
+    this.showValidationSummary = false,
+    this.disableSubmitUntilValid = false,
+    this.disableSubmitUntilDirty = false,
+    this.showAsyncValidationHints = true,
+    this.showResetButton = false,
+    this.useStepper = false,
+    this.submitButtonStyle,
+    this.secondaryButtonStyle,
+    this.fieldSpacing = 16,
+    this.sectionSpacing = 24,
+    this.uiText = const FormFlutterUiText(),
+  });
+
+  /// Schema used to build controller values and visible sections.
+  final FormFlutterSchema schema;
+
+  /// Optional externally managed controller.
+  final FormFlutterController? controller;
+
+  /// Called with the latest values when the form submits successfully.
+  final ValueChanged<FormFlutterValues> onSubmit;
+
+  /// Custom builders keyed by resolved schema field name.
+  final Map<String, FormFlutterSchemaFieldBuilder> buildersByName;
+
+  /// Custom builders keyed by field kind.
+  final Map<FormFlutterFieldKind, FormFlutterSchemaFieldBuilder> buildersByKind;
+
+  /// Optional file picker used by generated file fields.
+  final Future<FormFlutterFileValue?> Function(
+    BuildContext context,
+    FormFlutterController controller,
+  )?
+  filePicker;
+
+  /// Optional image picker used by generated image fields.
+  final Future<FormFlutterFileValue?> Function(
+    BuildContext context,
+    FormFlutterController controller,
+  )?
+  imagePicker;
+
+  /// Called whenever controller values change.
+  final ValueChanged<FormFlutterValues>? onChanged;
+
+  /// Called after the built-in reset action runs.
+  final VoidCallback? onReset;
+
+  final String submitLabel;
+  final String resetLabel;
+  final Widget? header;
+  final bool renderFieldsAfterHeader;
+  final AutovalidateMode autovalidateMode;
+  final bool scrollToFirstError;
+  final bool showValidationSummary;
+  final bool disableSubmitUntilValid;
+  final bool disableSubmitUntilDirty;
+  final bool showAsyncValidationHints;
+  final bool showResetButton;
+  final bool useStepper;
+  final ButtonStyle? submitButtonStyle;
+  final ButtonStyle? secondaryButtonStyle;
+  final double fieldSpacing;
+  final double sectionSpacing;
+  final FormFlutterUiText uiText;
+
+  @override
+  State<FormFlutterSchemaForm> createState() => _FormFlutterSchemaFormState();
+}
+
+class _FormFlutterSchemaFormState extends State<FormFlutterSchemaForm> {
+  late FormFlutterController _controller;
+  late bool _ownsController;
+
+  @override
+  void initState() {
+    super.initState();
+    _configureController();
+  }
+
+  @override
+  void didUpdateWidget(covariant FormFlutterSchemaForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller ||
+        oldWidget.schema != widget.schema) {
+      if (_ownsController) {
+        _controller.dispose();
+      }
+      _configureController();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_ownsController) {
+      _controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _configureController() {
+    _ownsController = widget.controller == null;
+    _controller =
+        widget.controller ??
+        FormFlutterFieldFactory.buildControllerFromSchema(widget.schema);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sections = FormFlutterFieldFactory.buildSectionsFromSchema(
+      widget.schema,
+      buildersByName: widget.buildersByName,
+      buildersByKind: widget.buildersByKind,
+      filePicker: widget.filePicker,
+      imagePicker: widget.imagePicker,
+    );
+
+    return DynamicFormFlutter(
+      controller: _controller,
+      fields: const [],
+      sections: sections,
+      onChanged: widget.onChanged,
+      onSubmit: widget.onSubmit,
+      onReset: widget.onReset,
+      submitLabel: widget.submitLabel,
+      resetLabel: widget.resetLabel,
+      header: widget.header,
+      renderFieldsAfterHeader: widget.renderFieldsAfterHeader,
+      autovalidateMode: widget.autovalidateMode,
+      scrollToFirstError: widget.scrollToFirstError,
+      showValidationSummary: widget.showValidationSummary,
+      disableSubmitUntilValid: widget.disableSubmitUntilValid,
+      disableSubmitUntilDirty: widget.disableSubmitUntilDirty,
+      showAsyncValidationHints: widget.showAsyncValidationHints,
+      showResetButton: widget.showResetButton,
+      useStepper: widget.useStepper,
+      submitButtonStyle: widget.submitButtonStyle,
+      secondaryButtonStyle: widget.secondaryButtonStyle,
+      fieldSpacing: widget.fieldSpacing,
+      sectionSpacing: widget.sectionSpacing,
+      uiText: widget.uiText,
+    );
+  }
+}
+
 class _ResolvedFieldConfig {
   const _ResolvedFieldConfig({
     required this.name,

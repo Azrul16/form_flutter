@@ -221,6 +221,31 @@ abstract final class FormFlutterOptionSets {
     FormFlutterOption(value: 'phone_call', label: 'Phone call'),
     FormFlutterOption(value: 'video_call', label: 'Video call'),
   ];
+
+  static const industries = [
+    FormFlutterOption(value: 'technology', label: 'Technology'),
+    FormFlutterOption(value: 'finance', label: 'Finance'),
+    FormFlutterOption(value: 'healthcare', label: 'Healthcare'),
+    FormFlutterOption(value: 'education', label: 'Education'),
+    FormFlutterOption(value: 'retail', label: 'Retail'),
+    FormFlutterOption(value: 'manufacturing', label: 'Manufacturing'),
+    FormFlutterOption(value: 'hospitality', label: 'Hospitality'),
+    FormFlutterOption(value: 'government', label: 'Government'),
+    FormFlutterOption(value: 'non_profit', label: 'Non-profit'),
+    FormFlutterOption(value: 'other', label: 'Other'),
+  ];
+
+  static const priorities = [
+    FormFlutterOption(value: 'low', label: 'Low'),
+    FormFlutterOption(value: 'medium', label: 'Medium'),
+    FormFlutterOption(value: 'high', label: 'High'),
+    FormFlutterOption(value: 'urgent', label: 'Urgent'),
+  ];
+
+  static const yesNo = [
+    FormFlutterOption(value: 'yes', label: 'Yes'),
+    FormFlutterOption(value: 'no', label: 'No'),
+  ];
 }
 
 /// Built-in field preset collections grouped by common form domains.
@@ -428,6 +453,13 @@ abstract final class FormFlutterCatalog {
       options: FormFlutterOptionSets.employmentTypes,
     ),
     FormFlutterFieldPreset(
+      key: 'industry',
+      label: 'Industry',
+      kind: FormFlutterFieldKind.dropdown,
+      category: FormFlutterFieldCategory.professional,
+      options: FormFlutterOptionSets.industries,
+    ),
+    FormFlutterFieldPreset(
       key: 'skills',
       label: 'Skills',
       kind: FormFlutterFieldKind.multiSelect,
@@ -580,6 +612,13 @@ abstract final class FormFlutterCatalog {
       kind: FormFlutterFieldKind.multiline,
       category: FormFlutterFieldCategory.appointment,
     ),
+    FormFlutterFieldPreset(
+      key: 'priority',
+      label: 'Priority',
+      kind: FormFlutterFieldKind.dropdown,
+      category: FormFlutterFieldCategory.appointment,
+      options: FormFlutterOptionSets.priorities,
+    ),
   ];
 
   static const List<FormFlutterFieldPreset> consentFields = [
@@ -621,6 +660,47 @@ abstract final class FormFlutterCatalog {
       ...commerceFields,
       ...appointmentFields,
       ...consentFields,
+    ];
+  }
+
+  static List<FormFlutterFieldPreset> byCategory(
+    FormFlutterFieldCategory category,
+  ) {
+    return [
+      for (final preset in all())
+        if (preset.category == category) preset,
+    ];
+  }
+
+  static FormFlutterFieldPreset? maybeByKey(String key) {
+    for (final preset in all()) {
+      if (preset.key == key) {
+        return preset;
+      }
+    }
+    return null;
+  }
+
+  static FormFlutterFieldPreset byKey(String key) {
+    final preset = maybeByKey(key);
+    if (preset == null) {
+      throw ArgumentError.value(key, 'key', 'Unknown form_flutter preset key');
+    }
+    return preset;
+  }
+
+  static List<FormFlutterFieldPreset> search(String query) {
+    final normalizedQuery = query.trim().toLowerCase();
+    if (normalizedQuery.isEmpty) {
+      return all();
+    }
+    return [
+      for (final preset in all())
+        if (preset.key.toLowerCase().contains(normalizedQuery) ||
+            preset.label.toLowerCase().contains(normalizedQuery) ||
+            (preset.description?.toLowerCase().contains(normalizedQuery) ??
+                false))
+          preset,
     ];
   }
 }

@@ -79,7 +79,10 @@ class DynamicFormFlutter extends StatefulWidget {
     required this.fields,
     required this.onSubmit,
     this.sections,
+    this.onChanged,
+    this.onReset,
     this.submitLabel = 'Submit',
+    this.resetLabel = 'Reset',
     this.header,
     this.renderFieldsAfterHeader = false,
     this.autovalidateMode = AutovalidateMode.disabled,
@@ -88,7 +91,10 @@ class DynamicFormFlutter extends StatefulWidget {
     this.disableSubmitUntilValid = false,
     this.disableSubmitUntilDirty = false,
     this.showAsyncValidationHints = true,
+    this.showResetButton = false,
     this.useStepper = false,
+    this.submitButtonStyle,
+    this.secondaryButtonStyle,
     this.fieldSpacing = 16,
     this.sectionSpacing = 24,
     this.uiText = const FormFlutterUiText(),
@@ -103,11 +109,20 @@ class DynamicFormFlutter extends StatefulWidget {
   /// Optional grouped sections used for grouped or stepped layouts.
   final List<FormFlutterSection>? sections;
 
+  /// Called whenever controller values change while this form is mounted.
+  final ValueChanged<FormFlutterValues>? onChanged;
+
   /// Called with the latest values when the form is submitted successfully.
   final ValueChanged<FormFlutterValues> onSubmit;
 
+  /// Called after the built-in reset button resets the controller.
+  final VoidCallback? onReset;
+
   /// Label used by the primary submit button.
   final String submitLabel;
+
+  /// Label used by the optional reset button.
+  final String resetLabel;
 
   /// Optional custom header widget shown above the form body.
   final Widget? header;
@@ -133,8 +148,17 @@ class DynamicFormFlutter extends StatefulWidget {
   /// Whether async validation progress indicators should be shown.
   final bool showAsyncValidationHints;
 
+  /// Whether to show a secondary button that resets controller values.
+  final bool showResetButton;
+
   /// Whether the form should render one section at a time as a stepper.
   final bool useStepper;
+
+  /// Optional style for primary submit/continue buttons.
+  final ButtonStyle? submitButtonStyle;
+
+  /// Optional style for secondary back/reset buttons.
+  final ButtonStyle? secondaryButtonStyle;
 
   /// Vertical spacing between rendered fields.
   final double fieldSpacing;
@@ -192,6 +216,7 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
 
     if (widget.autovalidateMode == AutovalidateMode.disabled) {
       _previousValues = currentValues;
+      widget.onChanged?.call(widget.controller.snapshot);
       setState(() {});
       return;
     }
@@ -211,6 +236,7 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
     }
 
     _previousValues = currentValues;
+    widget.onChanged?.call(widget.controller.snapshot);
     setState(() {});
   }
 
@@ -259,6 +285,9 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
       fields,
       scrollOnError: widget.scrollToFirstError,
     );
+    if (!mounted) {
+      return;
+    }
     if (!isValid) {
       setState(() {});
       return;
@@ -310,6 +339,9 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
       }
       widget.controller.setAsyncValidating(field.name, true);
       final error = await field.validateAsync(widget.controller);
+      if (!mounted) {
+        return false;
+      }
       widget.controller.setAsyncValidating(field.name, false);
       widget.controller.setError(field.name, error);
       if (error != null) {
@@ -340,6 +372,12 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
       alignment: 0.15,
       curve: Curves.easeOut,
     );
+  }
+
+  void _handleReset() {
+    widget.controller.reset();
+    widget.onReset?.call();
+    setState(() {});
   }
 
   bool get _submitDisabled {
@@ -525,10 +563,21 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
                           _currentStep--;
                         });
                       },
+                style: widget.secondaryButtonStyle,
                 child: Text(widget.uiText.backLabel),
               ),
             ),
           if (_currentStep > 0) const SizedBox(width: 12),
+          if (widget.showResetButton) ...[
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _submitting ? null : _handleReset,
+                style: widget.secondaryButtonStyle,
+                child: Text(widget.resetLabel),
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
           Expanded(
             child: FilledButton(
               onPressed: _submitDisabled
@@ -539,9 +588,36 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
                         advanceStep: !isLastStep,
                       );
                     },
+              style: widget.submitButtonStyle,
               child: Text(
                 isLastStep ? widget.submitLabel : widget.uiText.continueLabel,
               ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (widget.showResetButton) {
+      return Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: _submitting ? null : _handleReset,
+              style: widget.secondaryButtonStyle,
+              child: Text(widget.resetLabel),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: FilledButton(
+              onPressed: _submitDisabled
+                  ? null
+                  : () {
+                      _handleSubmit();
+                    },
+              style: widget.submitButtonStyle,
+              child: Text(widget.submitLabel),
             ),
           ),
         ],
@@ -556,6 +632,7 @@ class _DynamicFormFlutterState extends State<DynamicFormFlutter> {
             : () {
                 _handleSubmit();
               },
+        style: widget.submitButtonStyle,
         child: Text(widget.submitLabel),
       ),
     );

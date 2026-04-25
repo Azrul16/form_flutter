@@ -6,6 +6,23 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:form_flutter/form_flutter.dart';
 
 void main() {
+  group('FormFlutterCatalog', () {
+    test('finds presets by key, category, and search text', () {
+      expect(FormFlutterCatalog.byKey('email').label, 'Email address');
+      expect(FormFlutterCatalog.maybeByKey('missing'), isNull);
+      expect(
+        FormFlutterCatalog.byCategory(
+          FormFlutterFieldCategory.professional,
+        ).map((preset) => preset.key),
+        containsAll(['company_name', 'industry', 'resume']),
+      );
+      expect(
+        FormFlutterCatalog.search('payment').map((preset) => preset.key),
+        contains('payment_method'),
+      );
+    });
+  });
+
   group('FormFlutterFieldFactory', () {
     test('builds catalog-promised field kinds', () {
       final presets = [
@@ -116,6 +133,31 @@ void main() {
   });
 
   group('FormFlutterSchema', () {
+    test('provides production-ready schema templates', () {
+      final registration = FormFlutterSchemaTemplates.accountRegistration();
+      final jobApplication = FormFlutterSchemaTemplates.jobApplication();
+      final appointment = FormFlutterSchemaTemplates.appointmentBooking();
+
+      expect(
+        FormFlutterFieldFactory.buildFieldsFromSchema(
+          registration,
+        ).map((field) => field.name),
+        containsAll(['username', 'email', 'password', 'confirm_password']),
+      );
+      expect(
+        FormFlutterFieldFactory.buildFieldsFromSchema(
+          jobApplication,
+        ).map((field) => field.name),
+        containsAll(['full_name', 'industry', 'resume']),
+      );
+      expect(
+        FormFlutterFieldFactory.buildFieldsFromSchema(
+          appointment,
+        ).map((field) => field.name),
+        containsAll(['appointment_date', 'appointment_time', 'priority']),
+      );
+    });
+
     test('builds schema sections and initial values from preset overrides', () {
       final schema = FormFlutterSchema(
         initialValues: const {'role': 'member'},
@@ -276,6 +318,62 @@ void main() {
   });
 
   group('Upgraded widgets', () {
+    testWidgets('schema form wires controller, change, reset, and submit', (
+      tester,
+    ) async {
+      final schema = FormFlutterSchema(
+        initialValues: const {'name': 'Ada'},
+        sections: const [
+          FormFlutterSchemaSection(
+            title: 'Profile',
+            fields: [
+              FormFlutterSchemaField(
+                name: 'name',
+                kind: FormFlutterFieldKind.text,
+                label: 'Name',
+              ),
+            ],
+          ),
+        ],
+      );
+      var changed = 0;
+      var reset = 0;
+      Map<String, Object?>? submitted;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FormFlutterSchemaForm(
+              schema: schema,
+              showResetButton: true,
+              onChanged: (_) => changed++,
+              onReset: () => reset++,
+              onSubmit: (values) => submitted = values.asMap(),
+            ),
+          ),
+        ),
+      );
+
+      await tester.enterText(find.byType(TextFormField), 'Grace');
+      await tester.pump();
+      expect(changed, 1);
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Reset'));
+      await tester.pump();
+      expect(reset, 1);
+      expect(
+        tester
+            .widget<TextFormField>(find.byType(TextFormField))
+            .controller
+            ?.text,
+        'Ada',
+      );
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
+      await tester.pumpAndSettle();
+      expect(submitted?['name'], 'Ada');
+    });
+
     testWidgets('stepper flow and validation summary work together', (
       tester,
     ) async {

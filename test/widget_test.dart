@@ -181,6 +181,77 @@ void main() {
     expect(textField().controller?.text, '3');
   });
 
+  testWidgets('dropdown field stays in sync after fromJson and reset', (
+    WidgetTester tester,
+  ) async {
+    final controller = FormFlutterController(
+      initialValues: const {'team': 'design'},
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _TestApp(
+        child: FormFlutterDropdownField<String>(
+          name: 'team',
+          label: 'Team',
+          options: const [
+            FormFlutterOption(value: 'design', label: 'Design'),
+            FormFlutterOption(value: 'product', label: 'Product'),
+          ],
+        ).buildField(controller),
+      ),
+    );
+
+    DropdownButtonFormField<String> dropdown() =>
+        tester.widget<DropdownButtonFormField<String>>(
+          find.byType(DropdownButtonFormField<String>),
+        );
+
+    expect(dropdown().initialValue, 'design');
+
+    controller.fromJson(const {'team': 'product'});
+    await tester.pump();
+    expect(dropdown().initialValue, 'product');
+    expect(find.text('Product'), findsOneWidget);
+
+    controller.reset();
+    await tester.pump();
+    expect(dropdown().initialValue, 'design');
+    expect(find.text('Design'), findsOneWidget);
+  });
+
+  testWidgets('autocomplete clears stale selection when text changes', (
+    WidgetTester tester,
+  ) async {
+    final controller = FormFlutterController(
+      initialValues: const {'team': 'Design'},
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _TestApp(
+        child: FormFlutterAutocompleteField<String>(
+          name: 'team',
+          label: 'Team',
+          options: const ['Design', 'Product'],
+          displayStringForOption: (option) => option,
+        ).buildField(controller),
+      ),
+    );
+
+    expect(controller.value<String>('team'), 'Design');
+    expect(find.text('Design'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextFormField), 'Product');
+    await tester.pump();
+
+    expect(controller.snapshot.asMap()['team'], isNull);
+    expect(
+      tester.widget<TextFormField>(find.byType(TextFormField)).controller?.text,
+      'Product',
+    );
+  });
+
   testWidgets('shows async validation progress while validating', (
     WidgetTester tester,
   ) async {
@@ -217,6 +288,42 @@ void main() {
     expect(find.text('Validating...'), findsNothing);
 
     controller.dispose();
+  });
+
+  testWidgets('does not set state after async validation form is removed', (
+    WidgetTester tester,
+  ) async {
+    final controller = FormFlutterController(
+      initialValues: const {'email': 'ada@example.com'},
+    );
+    addTearDown(controller.dispose);
+    final completer = Completer<String?>();
+
+    await tester.pumpWidget(
+      _TestApp(
+        child: DynamicFormFlutter(
+          controller: controller,
+          fields: [
+            FormFlutterTextField(
+              name: 'email',
+              label: 'Email',
+              asyncValidator: (_, _) => completer.future,
+            ),
+          ],
+          onSubmit: (_) {},
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Submit'));
+    await tester.pump();
+    expect(find.text('Validating...'), findsOneWidget);
+
+    await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
+    completer.complete(null);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('updates visible sections when values change', (

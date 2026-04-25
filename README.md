@@ -12,11 +12,12 @@ A Flutter package for building reusable, schema-friendly forms with shared valid
 - Common option sets for fields like gender, marital status, degree, employment type, payment method, and more
 - Dedicated example app and local playground demonstrating controller export, import, reset, live state previews, and schema-generated forms
 
-## What's New In 1.0.2
+## What's New In 1.0.3
 
-- Text and number inputs now stay visually in sync when values are changed through controller helpers like `fromJson(...)` and `reset(...)`
-- `DynamicFormFlutter` autovalidation now revalidates touched dependent fields, improving flows like confirm-password checks when source values change
-- `device_preview` is now demo-only in `example/`, keeping the package runtime dependency surface cleaner
+- Added `FormFlutterSchemaForm` for rendering complete schema-driven forms with one widget
+- Added production-ready schema templates for registration, profile, job application, appointment, feedback, and checkout flows
+- Added richer form controls including `onChanged`, reset button support, button styling hooks, and catalog lookup helpers
+- Fixed async validation disposal safety and autocomplete stale-selection handling
 
 ## Getting started
 
@@ -24,7 +25,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  form_flutter: ^1.0.2
+  form_flutter: ^1.0.3
 ```
 
 Then run:
@@ -256,9 +257,42 @@ DynamicFormFlutter(
 )
 ```
 
+For the shortest production-style setup, use a built-in schema template with
+`FormFlutterSchemaForm`:
+
+```dart
+FormFlutterSchemaForm(
+  schema: FormFlutterSchemaTemplates.jobApplication(
+    initialValues: const {'industry': 'technology'},
+  ),
+  useStepper: true,
+  showResetButton: true,
+  showValidationSummary: true,
+  scrollToFirstError: true,
+  autovalidateMode: AutovalidateMode.onUserInteraction,
+  onChanged: (values) {
+    debugPrint('Draft changed: ${values.asMap()}');
+  },
+  onSubmit: (values) {
+    debugPrint('Job application: ${values.asMap()}');
+  },
+)
+```
+
+Built-in schema templates include:
+
+- `FormFlutterSchemaTemplates.accountRegistration()`
+- `FormFlutterSchemaTemplates.profile()`
+- `FormFlutterSchemaTemplates.jobApplication()`
+- `FormFlutterSchemaTemplates.appointmentBooking()`
+- `FormFlutterSchemaTemplates.feedback()`
+- `FormFlutterSchemaTemplates.checkout()`
+
 Schema helpers include:
 
 - `FormFlutterSchema`, `FormFlutterSchemaSection`, and `FormFlutterSchemaField`
+- `FormFlutterSchemaForm` for rendering a complete schema with one widget
+- `FormFlutterSchemaTemplates` for common professional workflows
 - `FormFlutterSchemaField.fromPreset(...)` for merging preset defaults with screen-specific overrides
 - `FormFlutterFieldFactory.buildFieldsFromSchema(...)` for flat forms
 - `FormFlutterFieldFactory.buildSectionsFromSchema(...)` for sectioned or stepper forms
@@ -308,7 +342,7 @@ Serialization notes:
 | Range fields | `FormFlutterSliderField` |
 | Validators | `FormFlutterValidators`, `FormFlutterPresetValidators` |
 | Catalog and presets | `FormFlutterCatalog`, `FormFlutterOptionSets`, `FormFlutterFieldPreset` |
-| Schema builder | `FormFlutterSchema`, `FormFlutterSchemaSection`, `FormFlutterSchemaField`, `FormFlutterFieldFactory` |
+| Schema builder | `FormFlutterSchema`, `FormFlutterSchemaSection`, `FormFlutterSchemaField`, `FormFlutterSchemaForm`, `FormFlutterSchemaTemplates`, `FormFlutterFieldFactory` |
 | Supporting models | `FormFlutterOption`, `FormFlutterFileValue` |
 
 Typical flow:
@@ -405,6 +439,7 @@ FormFlutterMultiSelectField<String>(
 
 Available visual controls include:
 
+- `onChanged`, `onReset`, `showResetButton`, `resetLabel`, `submitButtonStyle`, and `secondaryButtonStyle` on `DynamicFormFlutter` and `FormFlutterSchemaForm`
 - `decorationOverride` and `textStyle` for text/date/time-like fields
 - `decoration`, `titleStyle`, `activeColor`, `checkColor`, `thumbColor`, and `trackColor` for toggle-style fields
 - `activeColor`, `inactiveColor`, `thumbColor`, and `valueStyle` for sliders

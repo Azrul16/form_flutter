@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and follows the versioning used by the package.
 
+## 1.0.3
+
+- Version bump to `1.0.3`
+- Added `FormFlutterSchemaForm` for one-widget schema-driven forms
+- Added `FormFlutterSchemaTemplates` for account registration, profile, job application, appointment booking, feedback, and checkout flows
+- Added `DynamicFormFlutter` hooks and controls for `onChanged`, reset actions, reset labels, and primary or secondary button styling
+- Added catalog helpers for preset lookup by key, category, and search query
+- Expanded professional option sets and presets with industry and priority choices
+- Fixed async validation lifecycle safety when forms unmount during validation
+- Fixed autocomplete stale selections when users edit text after choosing an option
+- Refreshed lockfiles and strengthened CI checks for formatting and docs
+
 ## 1.0.2
 
 - Version bump to `1.0.2`

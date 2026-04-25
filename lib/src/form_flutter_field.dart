@@ -2286,6 +2286,7 @@ class _FormFlutterAutocompleteInput<T extends Object> extends StatefulWidget {
 class _FormFlutterAutocompleteInputState<T extends Object>
     extends State<_FormFlutterAutocompleteInput<T>> {
   late final TextEditingController _textController;
+  bool _preserveQueryForClearedSelection = false;
 
   @override
   void initState() {
@@ -2317,7 +2318,9 @@ class _FormFlutterAutocompleteInputState<T extends Object>
         final currentLabel = currentValue == null
             ? ''
             : widget.field.displayStringForOption(currentValue);
-        if (_textController.text != currentLabel &&
+        if (_preserveQueryForClearedSelection && currentValue == null) {
+          _preserveQueryForClearedSelection = false;
+        } else if (_textController.text != currentLabel &&
             !_textController.value.composing.isValid) {
           _textController.value = TextEditingValue(
             text: currentLabel,
@@ -2368,7 +2371,22 @@ class _FormFlutterAutocompleteInputState<T extends Object>
                       focusNode: focusNode,
                       style: widget.field.textStyle,
                       onChanged: (value) {
-                        if (value.isEmpty) {
+                        _textController.value = TextEditingValue(
+                          text: value,
+                          selection: TextSelection.collapsed(
+                            offset: value.length,
+                          ),
+                        );
+                        final selectedValue = widget.field.normalizeValue(
+                          widget.controller.snapshot.asMap()[widget.field.name],
+                        );
+                        final selectedLabel = selectedValue == null
+                            ? ''
+                            : widget.field.displayStringForOption(
+                                selectedValue,
+                              );
+                        if (value != selectedLabel) {
+                          _preserveQueryForClearedSelection = true;
                           widget.controller.setValue(widget.field.name, null);
                           widget.controller.setError(widget.field.name, null);
                         }
